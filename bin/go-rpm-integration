@@ -209,9 +209,10 @@ for dir in $(\
   ) ; do
   pushd "${workroot}/src/${dir}" >/dev/null
     echo "Testing: \"${workroot}/src/${dir}\""
-    (set -x ; GOPATH="${GO_BUILD_PATH}:${GOPATH:+${GOPATH}:}${gopath}" \
-              go test ${GO_TEST_FLAGS} \
-                      -ldflags "${LDFLAGS:+${LDFLAGS} }-extldflags '${GO_TEST_EXT_LD_FLAGS}'")
+    (EXT_LDFLAGS="${EXT_LDFLAGS:+-extldflags '${EXT_LDFLAGS}'}"
+     LDFLAGS="${LDFLAGS:+${LDFLAGS} }'${EXT_LDFLAGS:-}'" ;
+    set -x ; GOPATH="${GO_BUILD_PATH}:${GOPATH:+${GOPATH}:}${gopath}" \
+    go test ${GO_TEST_FLAGS}${LDFLAGS:+ -ldflags '${LDFLAGS}'})
   popd >/dev/null
 done
 }

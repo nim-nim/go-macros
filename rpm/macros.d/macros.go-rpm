@@ -149,7 +149,8 @@ go-rpm-integration install %{!?-i*:-i %{goipath}} \\
 %gochecks(i:sp:g:wb:d:t:r:) %{expand:
 PATH="${PWD}/_bin${PATH:+:${PATH}}" \\
 %{?gotestflags:GO_TEST_FLAGS="%{gotestflags}"} \\
-%{?gotestextldflags:GO_TEST_EXT_LD_FLAGS="%{gotestextldflags}"} \\
+%{?gotestldflags:LDFLAGS="${LDFLAGS:+${LDFLAGS} }%{gotestldflags}"} \\
+%{?gotestextldflags:EXT_LDFLAGS="%{gotestextldflags}"} \\
 go-rpm-integration check %{!?-i*:-i %{goipath}} %{!?-p*:-p %{buildroot}} \\
                          %{!?-g*:-g %{gopath}} %{!?-b*:-b "$PWD/_build"} %{?gochecksflags} %{?**}
 }
