@@ -77,11 +77,14 @@ print(result)
 #
 # The following spec variables SHOULD be set before calling the macro:
 #
-#   forgeurl  the project url on the forge, strongly recommended, if it can not
-#             be deduced from goipath; alternatively, use -u <url>
+#   forgeurl  the project url on the forge,
+#             if it can not be deduced from goipath
 #   Version   if applicable, set it with Version: <version>
 #   tag       if applicable
 #   commit    if applicable
+#   date      if applicable (to override the mtime of the Source archive)
+#
+#  Use -z for multiple calls to the macro
 #
 # The macro will attempt to compute and set the following variables if they are
 # not already set by the packager:
@@ -99,72 +102,81 @@ print(result)
 #   archiveext     the source archive filename extensions, without leading dot
 #   archiveurl     the url that can be used to download the source archive,
 #                  without renaming
+#   topdir         the source archive top directory (can be empty)
+#   extractdir     the source directory created inside %{_builddir} after using
+#                  %%forgesetup, %forgeautosetup or %{forgesetupargs}
+#   repo           the repository name
+#   owner          the repository owner (if used by another computed variable)
+#   shortcommit    the commit hash clamping used by the forge, if any
 #   scm            the scm type, when packaging code snapshots: commits or tags
+#   distprefix     the prefix that needs adding to dist to trace non-release packaging
 #
-# If the macro is unable to parse your forgeurl value set at least archivename
-# and archiveurl before calling it.
-#
-# Most of the computed variables are both overridable and optional. However,
-# the macro WILL REDEFINE %{dist} when packaging a snapshot (commit or tag).
-# The previous %{dist} value will be lost. Don’t call the macro if you don’t
-# wish %{dist} to be changed.
+# Most of the computed variables are both overridable and optional.
 #
 # Optional parameters:
-#   -u <url>  Ignore forgeurl even if it exists and use <url> instead. Note
-#             that the macro will still end up setting <url> as the forgeurl
-#             spec variable if it manages to parse it.
+#   -a          process all sources in one go, instead of using separate -z calls
+#   -z <number> suffix all the read and written variable names with <number>
+#               for example read     goipath<number>, version<number>…
+#                       and generate goname<number>, archiveurl<number>…
+#               The macro assumes that null or nil suffix is used for the primary
+#               package source.
 #   -s  Silently ignore problems in forgeurl, use it if it can be parsed,
 #       ignore it otherwise.
-#   -p  Restore problem handling, override -s.
 #   -v  Be verbose and print every spec variable the macro sets.
 #   -i  Print some info about the state of spec variables the macro may use or
 #       set at the end of the processing.
-%gometa(u:spvi) %{expand:%{lua:
-local forgeurl    = rpm.expand("%{?-u*}")
-if (forgeurl == "") then
-  forgeurl        = rpm.expand("%{?forgeurl}")
-end
--- Be explicit about the spec variables we’re setting
-local function explicitset(rpmvariable,value)
-  rpm.define(rpmvariable .. " " .. value)
-  if (rpm.expand("%{?-v}") ~= "") then
-    rpm.expand("%{echo:Setting %%{" .. rpmvariable .. "} = " .. value .. "\\n}")
+%gometa(az:svi) %{lua:
+print(           "BuildRequires: go-rpm-macros\\n")
+print(rpm.expand("ExclusiveArch: %{go_arches}\\n"))
+local     verbose = (rpm.expand("%{-v}") ~= "")
+local informative = (rpm.expand("%{-i}") ~= "")
+local  processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local  forgeflags =  rpm.expand("%{-s} %{-v} %{-i}")
+local rpmmacros = require "rpmmacros"
+-- Main function
+local function process(suffix)
+  local zsuffix = ""
+  if (suffix ~= "") then
+        zsuffix = " -z " .. suffix
+  end
+  local ismain = (suffix == "") or (suffix == "0")
+  if ismain then
+    rpmmacros.zalias({"forgeurl","goipath","goname","gourl","gosource"},verbose)
+  end
+  local spec = {}
+  for _, v in ipairs({'goipath','forgeurl'}) do
+    spec[v] = rpm.expand("%{?" .. v .. suffix .. "}")
+  end
+  -- All the Go packaging automation relies on goipath being set
+  if (spec["goipath"] == "") then
+    rpm.expand("%{error:Please set the Go import path in the %%{goipath" .. suffix .. "} variable before calling %%gometa" .. zsuffix .. "!}")
+  end
+  if (spec["forgeurl"] ~= "") then
+    rpmmacros.safeset("gourl"    .. suffix, "%{forgeurl"        .. suffix .. "}",verbose)
+  else
+    rpmmacros.safeset("gourl"    .. suffix, "https://%{goipath" .. suffix .. "}",verbose)
+    rpmmacros.safeset("forgeurl" .. suffix, "%{gourl"           .. suffix .. "}",verbose)
+  end
+  print(rpm.expand('%forgemeta ' .. forgeflags .. zsuffix .. '\\n'))
+  if (rpm.expand("%{?forgesource" .. suffix .. "}") ~= "") then
+    rpmmacros.safeset("gosource" .. suffix, "%{forgesource" .. suffix .. "}",verbose)
+  else
+    rpmmacros.safeset("gosource" .. suffix, "%{gourl" .. suffix .. "}/%{archivename" .. suffix .. "}.%{archiveext" .. suffix .. "}",verbose)
+  end
+  rpmmacros.safeset(  "goname"   .. suffix, "%gorpmname %{goipath" .. suffix .. "}",verbose)
+  rpmmacros.zalias({"forgeurl","goname","gourl","gosource"},verbose)
+  -- Final spec variable summary if the macro was called with -i
+  if informative then
+    rpm.expand("%{echo:Packaging variables read or set by %%gometa}")
+    rpmmacros.echovars({"goipath","goname","gourl","gosource"}, suffix)
   end
 end
--- Never ever stomp on a spec variable the packager already set
-local function safeset(rpmvariable,value)
-  if (rpm.expand("%{?" .. rpmvariable .. "}") == "") then
-    explicitset(rpmvariable,value)
+-- Main loop
+if processall then
+  for _,s in pairs(rpmmacros.getsuffixes("goipath")) do
+    process(s)
   end
-end
--- All the Go packaging automation relies on goipath being set
-local goipath = rpm.expand("%{?goipath}")
-if (goipath == "") then
-  rpm.expand("%{error:Please set the Go import path in the “goipath” variable before calling “gometa”!}")
-end
--- Compute and set spec variables
-if (forgeurl ~= "") then
-  rpm.expand("%forgemeta %{?-v} %{?-i} %{?-s} %{?-p} -u " .. forgeurl .. "\\n")
-  safeset("gourl", forgeurl)
 else
-  safeset("gourl", "https://" .. goipath)
-  rpm.expand("%forgemeta %{?-v} %{?-i} -s     %{?-p} -u %{gourl}\\n")
+  process(rpm.expand("%{-z*}"))
 end
-if (rpm.expand("%{?forgesource}") ~= "") then
-  safeset("gosource", "%{forgesource}")
-else
-  safeset("gosource", "%{gourl}/%{archivename}.%{archiveext}")
-end
-safeset("goname", "%gorpmname %{goipath}")
-rpm.define("gosetup %forgesetup")
--- Final spec variable summary if the macro was called with -i
-if (rpm.expand("%{?-i}") ~= "") then
-  rpm.expand("%{echo:Go-specific packaging variables}")
-  rpm.expand("%{echo:  goipath:         %{?goipath}}")
-  rpm.expand("%{echo:  goname:          %{?goname}}")
-  rpm.expand("%{echo:  gourl:           %{?gourl}}")
-  rpm.expand("%{echo:  gosource:        %{?gosource}}")
-end}
-BuildRequires: go-rpm-macros
-ExclusiveArch: %{go_arches}
 }

@@ -9,8 +9,11 @@
 %gccgo_min_vers  5.0.0
 
 # Define commands for building
-%gobuild(o:) go build -compiler gccgo -gccgoflags "$RPM_OPT_FLAGS ${LDFLAGS:-} %__global_ldflags %{?__golang_extldflags}" -a -v -x %{?**};
+%gobuild(o:) %{expand:
+%{?gobuilddir:GOPATH="%{gobuilddir}:${GOPATH:+${GOPATH}:}%{?gopath}"} \\
+go build -compiler gccgo -gccgoflags     "$RPM_OPT_FLAGS ${LDFLAGS:-}%{?currentgoldflags} %__global_ldflags %{?__golang_extldflags}" -a -v -x %{?**};
+}
 
 # Define commands for testing
-%gotestflags -compiler gccgo -gccgoflags "$RPM_OPT_FLAGS ${LDFLAGS:-} %__global_ldflags %{?__golang_extldflags}"
+%gotestflags -compiler gccgo -gccgoflags "$RPM_OPT_FLAGS ${LDFLAGS:-}%{?currentgoldflags} %__global_ldflags %{?__golang_extldflags}"
 %gotest() go test %{gotestflags} %{?**};

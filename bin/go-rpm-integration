@@ -26,10 +26,11 @@ arguments are optional.
 -e <extension>       add files ending in <extension> to the default
                      installation set,
                      can be specified several times
--s <sourcedir>       install files from the specified source directory, not
-                     from the current directory
+-s <sourcedir>       read expanded and prepared Go sources in <sourcedir>/src
+                     <sourcedir> should be populated in %prep
 -o <file>            output file lists to file,
                      default value if not set: devel.file-list
+-O <dir>             create file list in <dir>
 <file>               add <file> to the default installation set,
                      can be specified several times
 
@@ -57,16 +58,13 @@ arguments are optional.
 Common arguments:
 
 -i <go import path>  a Go import path of the target package,
-                     can be specified several times,
                      mandatory for: install and check,
                      ignored by: provides and requires
 -h                   print this help
 -p <prefix>:         an optionnal prefix path such as %{buildroot}
 -g <go path>:        the root of the Go source tree
                      default value if not set: /usr/share/gocode
--b <go build path>   sets the GO_BUILD_PATH work directory,
-                     it will be created if not already existing,
-                     default value if not set: \$PWD/_build
+-b <bindir>          read binaries already produced in <bindir>
                      used by: install and check,
                      ignored by: provides and requires
 -d <directory>       a directory that should be ignored during processing,
@@ -86,18 +84,98 @@ EOF_USAGE
 exit 1
 }
 
+multigoipath() {
+cat >&2 << EOF_MULTIGOIPATH
+Error: Attempt to install to multiple Go import paths. Aborting…
+
+The installation target of “$0 install” is a unique Go import
+path tree. Some of the presets rpm passes to this command in the %install stage
+rely on this unicity.
+
+If you need to install files to different Go import path trees you MUST invoque
+this command once per target.
+
+Even though the import path value was originally intended to be implicit in Go,
+it usually leaks in multiple project files (documentation, unit tests, non-Go
+files and so on).
+
+Therefore you SHOULD always:
+ — determine the canonical import path name of the project you want to install,
+ — change every self-reference in the project files, to this canonical name,
+   removing alternative leftovers (usually done, in the %prep stage of rpm)
+ — and only then deploy the result to the canonical import path using
+   “$0 install -i <canonical-import-path>”
+
+You MAY use symbolic links to maintain compatibility with codebases that refer
+to this project via alternative, non canonical names (due to past renamings
+or forkings). That will have the same effect as the HTTP redirects some
+project upstreams are fond of. It WILL break the same way on the explicit
+self-references that may exist in the files of this project.
+
+Therefore, you SHOULD preferably patch those codebases to use the project
+canonical import path, like you did for this codebase in %prep.
+
+If you can not patch away references to an alternative import path name in some
+third-party codebases, but wish to avoid import path naming problems, you
+SHOULD:
+ — prepare, in %prep, a separate copy of the project files, with every self
+   reference changed to the alternative name
+ — and only then deploy, from this separate copy, to the alternative name
+   “$0 install -i <alternative-import-path> \
+                               -s <separate-source>”
+
+This later pattern is not recommended as it helps entrenching naming confusion.
+EOF_MULTIGOIPATH
+exit 1
+}
+
+alreadyexists() {
+cat >&2 << EOF_ALREADYEXISTS
+Error: Attempt to overwrite an existing installation. Aborting…
+
+“$0 install” aims at deploying clean Go source project files in
+the %install stage of rpm.
+
+You SHOULD have prepared the project files in the rpm %prep stage and resolved
+any file conflict before calling “$0 install”. That means a
+specific Go import path is usually deployed in a single call.
+
+If you wish to deploy the same import path using multiple
+“$0 install” calls you MUST make sure they use consistent
+versionning and exclusion arguments. Those arguments are recorded on disk to
+allow reliable provides computation in later rpm stages.
+
+If used outside rpm, you MUST ensure some other way no conflicting installation
+already exists. “$0 install” has no way to remove cleanly such
+an installation. Installing blindly over another deployment would leave in
+place, all the files, not present in the new installation, resulting in an
+unreliable mix.
+EOF_ALREADYEXISTS
+exit 1
+}
+
 action=''
-version=''
 prefix=''
 checkin="workdir"
 sourcedir="${PWD}"
-GO_BUILD_PATH="${GO_BUILD_BATH:-${PWD}/_build}"
+bindir="${GO_BUILD_DIR:-${PWD}/_build}"
+goldflags=''
 gopath=/usr/share/gocode
 filelist='devel.file-list'
-goipathes=()
-_last_goipath=''
-declare -A attributes
-declare -A golistflags
+filelistroot="${PWD}"
+goipath=''
+declare -A metadata
+flags_d=()
+flags_t=()
+flags_r=()
+flags_e=()
+declare -A imetadata
+iflags_d=()
+iflags_t=()
+iflags_r=()
+iflags_e=()
+vinstall=install
+vln=ln
 
 if [[ $# -eq 0 ]] ; then
   usage
@@ -109,17 +187,19 @@ fi
 
 shift
 
-if ! options=$(getopt -n $0 -o hi:yp:g:wb:d:t:r:e:s:o:v:a: \
+if ! options=$(getopt -n $0 -o hi:yp:g:wb:d:t:r:e:s:o:O:l:V:T:C:B:vaz: \
                       -l help,go-import-path: \
                       -l system-files,prefix:,go-path: \
-                      -l workdir-files,go-build-path: \
+                      -l workdir-files,bindir: \
                       -l ignore-directory: \
                       -l ignore-tree: \
                       -l ignore-regex: \
-                      -l include-extension:,output: \
-                      -l version:,attribute: \
-                      -- "$@")
-then
+                      -l include-extension: \
+                      -l sourcedir: \
+                      -l output:,output-root \
+                      -l version:,tag:,commit:,branch: \
+                      -l verbose: \
+                      -- "$@") ; then
     usage
 fi
 
@@ -127,33 +207,121 @@ eval set -- "$options"
 
 while [ $# -gt 0 ] ; do
   case $1 in
-    -h|--help)                      usage                               ;;
-    -i|--go-import-path)            goipathes+=( "$2" ); _last_goipath="${2}"          ; shift;;
-    -y|--system-files)              checkin="system"                    ;;
-    -p|--prefix)                    prefix=$(realpath -sm "$2")  ; shift;;
-    -g|--go-path)                   gopath="$2"                  ; shift;;
-    -w|--workdir-files)             checkin="workdir"                   ;;
-    -b|--go-build-path)             GO_BUILD_PATH="$2"           ; shift;;
-    -d|--ignore-directory)          _dir="${_last_goipath}/${2##${_last_goipath}/}"
-                                    golistflags[$_last_goipath]="${golistflags[$_last_goipath]} -d ${_dir%/.}" ; shift;;
-    -t|--ignore-tree)               _tree="${_last_goipath}/${2##${_last_goipath}/}"
-                                    golistflags[$_last_goipath]="${golistflags[$_last_goipath]} -t ${_tree}" ; shift;;
-    -r|--ignore-regex)              golistflags[$_last_goipath]="${golistflags[$_last_goipath]} -r $2" ; shift;;
-    -e|--include-extension)         golistflags[$_last_goipath]="${golistflags[$_last_goipath]} -e $2" ; shift;;
-    -s|--source-dir)                sourcedir="$2"               ; shift;;
-    -o|--output)                    filelist="$2"                ; shift;;
-    -v|--version)                   version="$2"                 ; shift;;
-    -a|--attribute)                 IFS=')' read -r -a newattrs <<< "$2"
-                                      for index in "${!newattrs[@]}" ; do
-                                        newattrs[index]=${newattrs[index]#\(}
-                                        attributes[${newattrs[index]%%=*}]=${newattrs[index]#*=}
-                                    done                         ; shift;;
+    -h|--help)                      usage                                ;;
+    -i|--go-import-path)            if [[ ("${goipath}" != "") && \
+                                          ("${goipath}" != "${2}") ]] ; then
+                                      multigoipath
+                                    else
+                                      goipath="${2}"
+                                    fi                            ; shift;;
+    -y|--system-files)              checkin="system"                     ;;
+    -p|--prefix)                    prefix=$(realpath -sm "${2}") ; shift;;
+    -g|--go-path)                   gopath="$2"                   ; shift;;
+    -w|--workdir-files)             checkin="workdir"                    ;;
+    -b|--bindir)                    bindir="${2}"                 ; shift;;
+    -d|--ignore-directory)          iflags_d+=( "${2}" )          ; shift;;
+    -t|--ignore-tree)               iflags_t+=( "${2}" )          ; shift;;
+    -r|--ignore-regex)              iflags_r+=( "${2}" )          ; shift;;
+    -e|--include-extension)         iflags_e+=( "${2}" )          ; shift;;
+    -s|--sourcedir )                sourcedir="${2}"              ; shift;;
+    -o|--output)                    filelist="${2}"               ; shift;;
+    -O|--output-root)               filelistroot="${2}"           ; shift;;
+    -l|--ldflags)                   ldflags="${2}"                ; shift;;
+    -V|--version)                   imetadata["version"]="${2}"   ; shift;;
+    -T|--tag)                       imetadata["tag"]="${2}"       ; shift;;
+    -C|--commit)                    imetadata["commit"]="${2}"    ; shift;;
+    -B|--branch)                    imetadata["branch"]="${2}"    ; shift;;
+    -v|--verbose)                   vinstall="install -v"
+                                    vln="ln -v"                          ;;
+    -a)                             ;;      # ignored, only used by the rpm macro side
+    -z)                             shift;; # ignored, only used by the rpm macro side
     (--)          shift; break ;;
     (-*)          usage ;;
     (*)           break ;;
   esac
   shift
 done
+
+dedupearray() {
+local -n arrayref="${1}"
+if [[ "${#arrayref[@]}" != "0" ]] ; then
+  local temparray=( "${arrayref[@]}" )
+  arrayref=()
+  while read -r -d $'\0' l ; do
+    arrayref+=( "${l}" )
+  done < <(printf "%s\0" "${temparray[@]}" | sort -z -u)
+fi
+}
+
+fixuserflags() {
+if [[ -z "${goipath}" ]] ; then
+  echo "No import path was specified using -i, exiting"
+  exit 1
+fi
+flags_d=( "${flags_d[@]##${goipath}/}" )
+flags_d=( "${flags_d[@]%/.}" )
+dedupearray flags_d
+flags_t=( "${flags_t[@]##${goipath}/}" )
+flags_t=( "${flags_t[@]%/.}" )
+dedupearray flags_t
+dedupearray flags_r
+dedupearray flags_e
+}
+
+expandflags() {
+[[ "${#flags_d[@]}" != "0" ]] && printf -- ' -d %s' "${flags_d[@]}"
+[[ "${#flags_t[@]}" != "0" ]] && printf -- ' -t %s' "${flags_t[@]}"
+[[ "${#flags_r[@]}" != "0" ]] && printf -- ' -r %s' "${flags_r[@]}"
+[[ "${#flags_e[@]}" != "0" ]] && printf -- ' -e %s' "${flags_e[@]}"
+}
+
+popmetadata() {
+unset metadata
+declare -g -A metadata
+for k in "${!imetadata[@]}"; do
+  metadata["${k}"]=${imetadata[${k}]}
+done
+flags_d=( "${iflags_d[@]}" )
+flags_t=( "${iflags_t[@]}" )
+flags_r=( "${iflags_r[@]}" )
+flags_e=( "${iflags_e[@]}" )
+}
+
+savemetadata() {
+medadatafile="${1}"
+rm -f "${medadatafile}"
+touch "${medadatafile}"
+for m in version tag commit branch ; do
+  if [[ -n "${metadata[${m}]}" ]] ; then
+    echo "${m}:${metadata[${m}]}" >> "${medadatafile}"
+  fi
+done
+[[ "${#flags_d[@]}" != "0" ]] && printf 'excludedir:%s\n'   "${flags_d[@]}" >> "${medadatafile}"
+[[ "${#flags_t[@]}" != "0" ]] && printf 'excludetree:%s\n'  "${flags_t[@]}" >> "${medadatafile}"
+[[ "${#flags_r[@]}" != "0" ]] && printf 'excluderegex:%s\n' "${flags_r[@]}" >> "${medadatafile}"
+}
+
+readmetadata() {
+medadatafile="${1}"
+popmetadata
+for m in version tag commit branch ; do
+  v=$(grep "^${m}\:" "${medadatafile}" | head -1)
+  v="${v#${m}:}"
+  [[ -n "${v}" ]] && metadata["${m}"]="${v}"
+done
+while read -r -d $'\n' l ; do
+  flags_d+=( "${l#excludedir:}" )
+done < <(grep "^excludedir:" "${medadatafile}")
+dedupearray flags_d
+while read -r -d $'\n' l ; do
+  flags_t+=( "${l#excludetree:}" )
+done < <(grep "^excludetree:" "${medadatafile}")
+dedupearray flags_t
+while read -r -d $'\n' l ; do
+  flags_r+=( "${l#excluderegex:}" )
+done < <(grep "^excluderegex:" "${medadatafile}")
+dedupearray flags_r
+}
 
 installfile() {
 local goipath="${1}"
@@ -175,19 +343,27 @@ if [[ ! -d "${destdir}" ]] ; then
   installfile "${goipath}" "${destdir#${prefix}}"
 fi
 if [[ (! -e $file) || (-d "${file}" && ! -L "${file}") ]] ; then
-  install -m 0755 -vd "${dest}"
+  ${vinstall} -m 0755 -d "${dest}"
   if [[ -d "${file}" && ! -L "${file}" ]] ; then
-    find "${file}" -maxdepth 1 -iname '*.md' -type f | while read docfile ; do
-      installfile "${goipath}" "${docfile}"
-    done
+    find "${file}" -maxdepth 1 -iname '*.md' -type f -print0 | \
+      while read -r -d $'\0' docfile ; do
+        installfile "${goipath}" "${docfile}"
+      done
   fi
   local fllprefix="%dir"
 else
   if [[ -L "${file}" ]] ; then
-    ln -vs   $(readlink "${file}") "${dest}"
-    touch -h -r         "${file}"  "${dest}"
+    ${vln} -s $(readlink "${file}") "${dest}"
+    touch -h -r          "${file}"  "${dest}"
   else
-    install -m 0644 -vp "${file}"  "${dest}"
+    if [[ -e "${dest}" ]] ; then
+      checksum=$(sha256sum "${file}")
+      checksum="${checksum%% *}"
+      destchecksum=$(sha256sum "${dest}")
+      destchecksum="${destchecksum%% *}"
+      [[ "${checksum}" != "${destchecksum=}" ]] && alreadyexists
+    fi
+    ${vinstall} -m 0644 -p "${file}"  "${dest}"
   fi
   [[ "${file}" == *.md ]] && local fllprefix="%doc"
 fi
@@ -195,119 +371,96 @@ echo "${fllprefix:+${fllprefix} }\"${dest#${prefix}}\"" >> "${filelist}"
 }
 
 listfiles() {
-goipath="${1}"
-echo $(GOPATH="${GO_BUILD_PATH}" golist --to-install \
-                                        --package-path ${goipath} \
-                                        ${golistflags[${goipath}]})
+local goipath="${1}"
+GOPATH="${sourcedir}" \
+  golist --to-install --package-path ${goipath} $(expandflags)
 }
 
 checks() {
-goipath="${1}"
-for dir in $(\
-  GOPATH="${workroot}${GOPATH+:${GOPATH}}" \
-  golist --provided --tests                \
-         --package-path ${goipath}         \
-         ${golistflags[$goipath]}          \
-  ) ; do
-  pushd "${workroot}/src/${dir}" >/dev/null
-    echo "Testing: \"${workroot}/src/${dir}\""
-    (set -x ; GOPATH="${GO_BUILD_PATH}:${GOPATH:+${GOPATH}:}${gopath}" \
-              go test ${GO_TEST_FLAGS} \
-                      -ldflags "${LDFLAGS:+${LDFLAGS} }-extldflags '${GO_TEST_EXT_LD_FLAGS}'")
-  popd >/dev/null
-done
+local goipath="${1}"
+GOPATH="${workroot}${GOPATH+:${GOPATH}}" \
+  golist --provided --tests --package-path ${goipath} $(expandflags) |\
+    while read -r -d $'\n' dir ; do
+      pushd "${workroot}/src/${dir}" >/dev/null
+        echo "${dir}"
+        GOPATH="${workroot}${GOPATH:+:${GOPATH}}:${gopath}" \
+          PATH="${workbin:+${workbin}:}${PATH}" \
+          go test ${GO_TEST_FLAGS} -ldflags "${LDFLAGS:+${LDFLAGS} }-extldflags '${GO_TEST_EXT_LD_FLAGS}'"
+      popd >/dev/null
+    done
 }
 
-fullprovides(){
-  namespace=${1}
-  prov=${2}
-  for index in "${!deco[@]}" ; do
-    echo "${namespace}(${prov})${deco[index]}${version:+ = ${version}}"
-  done
+fullprovides() {
+local fp="${1}(${2})"
+echo "${fp}${metadata[version]:+ = ${metadata[version]}}"
+for m in "${!metadata[@]}" ; do
+  if [[ "${m}" != "version" ]] ; then
+    echo "${fp}(${m}=${metadata[${m}]})${metadata[version]:+ = ${metadata[version]}}"
+  fi
+done
 }
 
 provides() {
-goipath="${1}"
-lockfile="${2}"
+local goipath="${1}"
 fullprovides golang-ipath "${goipath}"
-for prov in $(\
-  GOPATH="${prefix}${gopath}"      \
-  golist --provided                \
-         --package-path ${goipath} \
-         $(cat "${lockfile}")      \
-         ${golistflags[$goipath]}  \
-  ); do
-  fullprovides golang "${prov}"
-done
+GOPATH="${prefix}${gopath}" \
+  golist --provided --package-path "${goipath}" $(expandflags) |\
+    while read -r -d $'\n' prov ; do
+      fullprovides golang "${prov}"
+    done
 }
 
 requires() {
-goipath="${1}"
-lockfile="${2}"
-for req in $(\
-  GOPATH="${prefix}${gopath}"      \
-  golist --imported                \
-         --package-path ${goipath} \
-         --skip-self               \
-         $(cat "${lockfile}")      \
-         ${golistflags[$goipath]}  \
-  ); do
-  echo "golang($req)"
-done
+local goipath="${1}"
+GOPATH="${prefix}${gopath}" \
+  golist --imported --package-path "${goipath}" $(expandflags) --skip-self |\
+    while read -r -d $'\n' req ; do
+      echo "golang($req)"
+    done
 }
 
 # Action-specific preparation
 case $action in
-  install)        [[ ${#goipathes[@]} -eq 0 ]] && exit 0
+  install)        popmetadata
+                  fixuserflags
                   otherfiles=( $* )
-                  filelist="${PWD}/${filelist}"
-                  install -m 0755   -vd "${prefix}${gopath}/src"
-                  for goipath in ${goipathes[@]} ; do
-                    echo "Installing: ${goipath}"
-                    fakepath="${GO_BUILD_PATH}/src/${goipath}"
-                    fakeroot=$(dirname ${fakepath})
-                    if [[ ! -d ${fakeroot} ]] ; then
-                      install -m 0755 -vd "${fakeroot}"
-                    else
-                      symdir="${fakeroot}"
-                      until [[ -h "${symdir}" || \
-                                  "${symdir}" == "${GO_BUILD_PATH}/src" ]] ; do
-                        symdir=$(dirname ${symdir})
-                      done
-                      # The root exists but none of the parents is a symlink
-                      # → someone goinstalled a Go subpackage before
-                      # → the conflicting path can be removed without affecting
-                      # project sources
-                      [[ "${symdir}" == "${GO_BUILD_PATH}/src" ]] && rm -fr "${fakepath}"
-                    fi
-                    [[ ! -d ${fakepath} ]] && ln -fs "${sourcedir}" "${fakepath}"
-                    pushd "${GO_BUILD_PATH}/src/${goipath}" >/dev/null
-                      echo "${golistflags[$goipath]}" > .goflags
-                      touch -r "${sourcedir}" .goipath .goflags
-                      for file in .goipath .goflags \
-                                  $(listfiles "${goipath}") ${otherfiles[@]} ; do
-                        installfile "${goipath}" "${file}"
-                      done
-                    popd >/dev/null
-                  done
+                  filelist="${filelistroot}/${filelist}"
+                  ${vinstall} -m 0755   -d "${prefix}${gopath}/src"
+                  echo "Installing: ${goipath}"
+                  pushd "${sourcedir}/src/${goipath}" >/dev/null
+                    savemetadata            .goipath
+                    touch -r "${sourcedir}" .goipath
+                    for file in $(listfiles "${goipath}") .goipath ${otherfiles[@]} ; do
+                      installfile "${goipath}" "${file}"
+                    done
+                    rm .goipath
+                  popd >/dev/null
                   sort -u -o "${filelist}" "${filelist}" ;;
-  check)          [[ ${#goipathes[@]} -eq 0 ]] && exit 0
-                  [[ ${checkin} == "system" ]] && workroot="${prefix}${gopath}" \
-                                               || workroot="${GO_BUILD_PATH}"
-                  for goipath in ${goipathes[@]} ; do
-                    echo "Testing: ${goipath}"
-                    checks "${goipath}"
-                  done ;;
-  provides)       deco=( "" )
-                  for key in "${!attributes[@]}"; do
-                    [[ -n "${attributes[$key]}" ]] && deco+=( "($key=${attributes[$key]})" )
-                  done
-                  while read lockfile ; do
+  check)          popmetadata
+                  fixuserflags
+                  if [[ ${checkin} == "system" ]] ; then
+                    workroot="${prefix}${gopath}"
+                    unset workbin
+                  else
+                    workroot="${sourcedir}"
+                    workbin="${bindir}"
+                  fi
+                  echo "Testing in: ${workroot}/src"
+                  echo "      PATH: ${workbin:+${workbin}:}${PATH}"
+                  echo "    GOPATH: ${workroot}${GOPATH:+:${GOPATH}}:${gopath}"
+                  echo "   command: go test ${GO_TEST_FLAGS} -ldflags \"${LDFLAGS:+${LDFLAGS} }-extldflags '${GO_TEST_EXT_LD_FLAGS}'\""
+                  echo "   testing: ${goipath}"
+                  checks "${goipath}" ;;
+  provides)       while read lockfile ; do
                     dir=$(dirname "${lockfile}")
-                    provides "${dir#${prefix}${gopath}/src/}" "${lockfile%%\.goipath}.goflags"
+                    goipath="${dir#${prefix}${gopath}/src/}"
+                    readmetadata "${lockfile}"
+                    provides "${goipath}"
                   done ;;
   requires)       while read lockfile ; do
                     dir=$(dirname "${lockfile}")
-                    requires "${dir#${prefix}${gopath}/src/}" "${lockfile%%\.goipath}.goflags"
+                    goipath="${dir#${prefix}${gopath}/src/}"
+                    readmetadata "${lockfile}"
+                    requires "${goipath}"
                   done ;;
 esac
