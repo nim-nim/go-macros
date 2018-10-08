@@ -58,7 +58,7 @@
 # -C <commit>         default: %{commit<number>}
 # -B <branch>         default: %{branch<number>}
 %goenv(z:i:vV:T:C:B:) %{lua:
-local    gorpm = require "rpmmacros.gorpm"
+local    gorpm =  require "rpmmacros.gorpm"
 local   suffix =  rpm.expand("%{?-z*}")
 local  goipath =  rpm.expand("%{?-i*}")
 local  verbose = (rpm.expand("%{-v}") ~= "")
@@ -128,12 +128,12 @@ golist --imported --package-path %{?-i*}%{!-i:%{currentgoipath}} --skip-self --t
 # -r                  resolve BuildRequires, but do not install them
 # -v                  be verbose
 %goprep(z:ai:b:s:kerv) %{lua:
+local    rpmmacros =  require "rpmmacros.common"
 local      extract = (rpm.expand("%{-e}") == "")
 local  installdeps = (rpm.expand("%{-r}") == "")
 local   processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 local   setupflags =  rpm.expand("%{!-v:-q}")
 local gomkdirflags =  rpm.expand("%{?-i} %{?-b} %{?-s} %{-k} %{-v}")
-local    rpmmacros =  require "rpmmacros"
 local buildrequires = {}
 local function process(suffix)
   local zsuffix = ""
@@ -206,8 +206,8 @@ end
 # When invoked several times with different file list names, it will attribute
 # directories to the first file list that makes use of them.
 %goinstall(z:ai:b:s:o:O:ve:d:t:rV:T:C:B:p:g:) %{lua:
+local  rpmmacros =  require "rpmmacros.common"
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
-local  rpmmacros = require "rpmmacros"
 -- Main function
 local function process(suffix)
   local zsuffix = ""
@@ -262,8 +262,8 @@ end
 #                     recursive (subdirectories are excluded)
 # -r <regexp>         exclude files matching <regexp>,
 %gocheck(z:ai:b:s:vd:t:rV:T:C:B:p:g:w) %{lua:
+local  rpmmacros =  require "rpmmacros.common"
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
-local  rpmmacros = require "rpmmacros"
 -- Main function
 local function process(suffix)
   local zsuffix = ""

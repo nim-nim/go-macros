@@ -89,8 +89,8 @@ print(gosrpm.gorpmname(rpm.expand("%1")))
 %gometa(az:svi) %{lua:
 print(           "BuildRequires: go-rpm-macros\\n")
 print(rpm.expand("ExclusiveArch: %{go_arches}\\n"))
-local   rpmmacros = require "rpmmacros.common"
-local      gosrpm = require "rpmmacros.gosrpm"
+local   rpmmacros =  require "rpmmacros.common"
+local      gosrpm =  require "rpmmacros.gosrpm"
 local     verbose =  rpm.expand("%{-v}") ~= ""
 local informative =  rpm.expand("%{-i}") ~= ""
 local      silent =  rpm.expand("%{-s}") ~= ""
