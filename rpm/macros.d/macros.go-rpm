@@ -58,61 +58,17 @@
 # -C <commit>         default: %{commit<number>}
 # -B <branch>         default: %{branch<number>}
 %goenv(z:i:vV:T:C:B:) %{lua:
-local rpmmacros = require "rpmmacros"
-local   verbose = (rpm.expand("%{-v}") ~= "")
-local    suffix =  rpm.expand("%{?-z*}")
-local    ismain = (suffix == "") or (suffix == "0")
-local   goipath =  rpm.expand("%{?-i*}")
-if (goipath ~= "") and (suffix == "") then
-  local bettersuffix = rpmmacros.getbestsuffix("goipath",goipath)
-  if (bettersuffix ~= nil) then
-         suffix = bettersuffix
-  end
+local    gorpm = require "rpmmacros.gorpm"
+local   suffix =  rpm.expand("%{?-z*}")
+local  goipath =  rpm.expand("%{?-i*}")
+local  verbose = (rpm.expand("%{-v}") ~= "")
+local    margs = { version = "V", tag = "T", commit = "C", branch = "B", }
+local  mvalues = {}
+for m,_ in pairs(margs) do
+  local v =  rpm.expand("%{?-" ..  margs[m] .. "*}")
+  if (v ~= "") then mvalues[m] = v end
 end
-if (goipath == "") then
-  goipath = "%{goipath" .. suffix .. "}"
-end
-suffixes=rpmmacros.getsuffixes("goipath")
-rpmmacros.safeset(             "goworkdir", "%{_builddir}/%{extractdir" .. suffixes[#suffixes] .. "}",               verbose)
-rpmmacros.safeset(            "gobuilddir", "%{goworkdir}/_build",                                                   verbose)
-if ismain then
-  rpmmacros.zalias({"gosourcedir","gofilelist"},                                                                     verbose)
-else
-  rpmmacros.safeset("gofilelist" .. suffix, rpm.expand("%gorpmname %{goipath" .. suffix .. "}") .. "-%{gofilelist}", verbose)
-end
-rpmmacros.safeset( "gosourcedir" .. suffix, "%{?extractdir" .. suffix .. ":%{_builddir}/%{extractdir" .. suffix .. "}}" ..
-                                           "%{!?extractdir" .. suffix .. ":%{goworkdir}}",                           verbose)
-if ismain then
-  rpmmacros.zalias({"gosourcedir"},                                                                                  verbose)
-end
-local   ldflags = ""
-local  metadata = {
-  version = { flag = "V", id = "version" },
-  tag     = { flag = "T", },
-  commit  = { flag = "C", },
-  branch  = { flag = "B", },
-}
-table.sort(metadata)
-for m,_ in pairs(metadata) do
-  metadata[m]["id"]    = metadata[m]["id"] or "version." .. m
-  metadata[m]["value"] = rpm.expand("%{?-" ..  metadata[m]["flag"] .. "*}" ..
-                                    "%{!-" ..  metadata[m]["flag"] .. ":"  ..
-                                    "%{?"  .. m .. suffix .. "}}")
-  if (m == "version") and (metadata["version"]["value"] == "0") then
-    metadata["version"]["value"] = ''
-  end
-  if (metadata[m]["value"] ~= '') then
-    ldflags = ldflags .. " -X " .. goipath .. "/" ..  metadata[m]["id"] .. "=" .. metadata[m]["value"]
-  end
-end
-for _, v in ipairs({"goipath","gosourcedir","gofilelist","version","tag","commit","branch"}) do
-  if (rpm.expand("%{?" .. v .. suffix .. "}") ~= "") then
-    rpmmacros.explicitset(  "current" .. v, "%{" .. v .. suffix .. "}", verbose)
-  else
-    rpmmacros.explicitunset("current" .. v,                             verbose)
-  end
-end
-rpmmacros.explicitset(  "currentgoldflags", ldflags,                    verbose)
+gorpm.goenv(suffix, goipath, verbose, mvalues)
 }
 
 # Create default Go directories. Arguments:
