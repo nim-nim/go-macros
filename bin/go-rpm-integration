@@ -269,10 +269,7 @@ dedupearray flags_e
 }
 
 expandflags() {
-[[ "${#flags_d[@]}" != "0" ]] && printf -- ' -d %s' "${flags_d[@]}"
-[[ "${#flags_t[@]}" != "0" ]] && printf -- ' -t %s' "${flags_t[@]}"
-[[ "${#flags_r[@]}" != "0" ]] && printf -- ' -r %s' "${flags_r[@]}"
-[[ "${#flags_e[@]}" != "0" ]] && printf -- ' -e %s' "${flags_e[@]}"
+echo ${flags_d[@]/#/ -d ${goipath}/} ${flags_t[@]/#/ -t ${goipath}/} ${flags_r[@]/#/ -r } ${flags_e[@]/#/ -e }
 }
 
 popmetadata() {
