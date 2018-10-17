@@ -259,9 +259,11 @@ if [[ -z "${goipath}" ]] ; then
   exit 1
 fi
 flags_d=( "${flags_d[@]##${goipath}/}" )
+flags_d=( "${flags_d[@]/#/${goipath}/}" )
 flags_d=( "${flags_d[@]%/.}" )
 dedupearray flags_d
 flags_t=( "${flags_t[@]##${goipath}/}" )
+flags_t=( "${flags_t[@]/#/${goipath}/}" )
 flags_t=( "${flags_t[@]%/.}" )
 dedupearray flags_t
 dedupearray flags_r
@@ -269,7 +271,7 @@ dedupearray flags_e
 }
 
 expandflags() {
-echo ${flags_d[@]/#/ -d ${goipath}/} ${flags_t[@]/#/ -t ${goipath}/} ${flags_r[@]/#/ -r } ${flags_e[@]/#/ -e }
+echo ${flags_d[@]/#/ -d } ${flags_t[@]/#/ -t } ${flags_r[@]/#/ -r } ${flags_e[@]/#/ -e }
 }
 
 popmetadata() {
