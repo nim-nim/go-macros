@@ -1,0 +1,20 @@
+# RPM macros for Go packages.
+#
+# © 2017-2018 Nicolas Mailhot <nim at fedoraproject dot org>
+#
+# Legacy deprecated bits graveyard, for compatibility only
+# Do not use, they *will* be removed
+
+%gobuildroot %{expand:
+%{warn:%%gobuildroot is obsolete, use %%goprep in %%prep instead!}
+%goenv   -z 0
+%gomkdir -k
+ln -fs "%{gobuilddir}/bin" _bin
+}
+
+%gochecksflags   %{gocheckflags}
+
+%gochecks(z:ai:b:s:vd:t:rV:T:C:B:p:g:w) %{expand:
+%{warn:%%gochecks is obsolete, use %%gocheck in %%check instead!}
+%gocheck %{?**}
+}
