@@ -12,8 +12,8 @@
 # redhat-rpm-macros.
 
 # Define arches for PA and SA
-%golang_arches   %{ix86} x86_64 %{arm} aarch64 ppc64le s390x
-%gccgo_arches    %{mips}
+%golang_arches   @@GOLANG_ARCHES@@
+%gccgo_arches    @@GCCGO_ARCHES@@
 %go_arches       %{golang_arches} %{gccgo_arches}
 
 # Where to set GOPATH for builds
