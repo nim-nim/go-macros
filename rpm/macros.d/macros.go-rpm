@@ -58,7 +58,7 @@
 # -C <commit>         default: %{commit<number>}
 # -B <branch>         default: %{branch<number>}
 %goenv(z:i:vV:T:C:B:) %{lua:
-local    gorpm =  require "rpmmacros.gorpm"
+local       go =  require "fedora.rpm.go"
 local   suffix =  rpm.expand("%{?-z*}")
 local  goipath =  rpm.expand("%{?-i*}")
 local  verbose = (rpm.expand("%{-v}") ~= "")
@@ -68,7 +68,7 @@ for m,_ in pairs(margs) do
   local v =  rpm.expand("%{?-" ..  margs[m] .. "*}")
   if (v ~= "") then mvalues[m] = v end
 end
-gorpm.goenv(suffix, goipath, verbose, mvalues)
+go.goenv(suffix, goipath, verbose, mvalues)
 }
 
 # Create default Go directories. Arguments:
@@ -128,12 +128,12 @@ golist --imported --package-path %{?-i*}%{!-i:%{currentgoipath}} --skip-self --t
 # -r                  resolve BuildRequires, but do not install them
 # -v                  be verbose
 %goprep(z:ai:b:s:kerv) %{lua:
-local    rpmmacros =  require "rpmmacros.common"
-local      extract = (rpm.expand("%{-e}") == "")
-local  installdeps = (rpm.expand("%{-r}") == "")
-local   processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
-local   setupflags =  rpm.expand("%{!-v:-q}")
-local gomkdirflags =  rpm.expand("%{?-i} %{?-b} %{?-s} %{-k} %{-v}")
+local        fedora =  require "fedora.common"
+local       extract = (rpm.expand("%{-e}") == "")
+local   installdeps = (rpm.expand("%{-r}") == "")
+local    processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local    setupflags =  rpm.expand("%{!-v:-q}")
+local  gomkdirflags =  rpm.expand("%{?-i} %{?-b} %{?-s} %{-k} %{-v}")
 local buildrequires = {}
 local function process(suffix)
   local zsuffix = ""
@@ -148,7 +148,7 @@ local function process(suffix)
 end
 -- Main loop
 if processall then
-  for _,s in pairs(rpmmacros.getsuffixes("goipath")) do
+  for _,s in pairs(fedora.getsuffixes("goipath")) do
     process(s)
   end
 else
@@ -206,7 +206,7 @@ end
 # When invoked several times with different file list names, it will attribute
 # directories to the first file list that makes use of them.
 %goinstall(z:ai:b:s:o:O:ve:d:t:rV:T:C:B:p:g:) %{lua:
-local  rpmmacros =  require "rpmmacros.common"
+local     fedora =  require "fedora.common"
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 -- Main function
 local function process(suffix)
@@ -230,7 +230,7 @@ local function process(suffix)
 end
 -- Main loop
 if processall then
-  for _,s in pairs(rpmmacros.getsuffixes("goipath")) do
+  for _,s in pairs(fedora.getsuffixes("goipath")) do
     process(s)
   end
 else
@@ -262,7 +262,7 @@ end
 #                     recursive (subdirectories are excluded)
 # -r <regexp>         exclude files matching <regexp>,
 %gocheck(z:ai:b:s:vd:t:rV:T:C:B:p:g:w) %{lua:
-local  rpmmacros =  require "rpmmacros.common"
+local     fedora =  require "fedora.common"
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 -- Main function
 local function process(suffix)
@@ -287,25 +287,10 @@ local function process(suffix)
 end
 -- Main loop
 if processall then
-  for _,s in pairs(rpmmacros.getsuffixes("goipath")) do
+  for _,s in pairs(fedora.getsuffixes("goipath")) do
     process(s)
   end
 else
   process(rpm.expand("%{-z*}"))
 end
-}
-
-# Legacy compatibility macros. Do not use them. Should go away eventually
-%gobuildroot %{expand:
-%{warn:%%gobuildroot is obsolete, use %%goprep in %%prep instead!}
-%goenv   -z 0
-%gomkdir -k
-ln -fs "%{gobuilddir}/bin" _bin
-}
-
-%gochecksflags   %{gocheckflags}
-
-%gochecks(z:ai:b:s:vd:t:rV:T:C:B:p:g:w) %{expand:
-%{warn:%%gochecks is obsolete, use %%gocheck in %%check instead!}
-%gocheck %{?**}
 }

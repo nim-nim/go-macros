@@ -25,8 +25,8 @@
 # Sanitize a Go import path that can then serve as rpm package name
 # Mandatory parameter: a Go import path
 %gorpmname() %{lua:
-local gosrpm = require "rpmmacros.gosrpm"
-print(gosrpm.gorpmname(rpm.expand("%1")))
+local go = require "fedora.srpm.go"
+print(go.gorpmname(rpm.expand("%1")))
 }
 
 # Map Go information to rpm metadata. This macro will compute default spec
@@ -89,17 +89,17 @@ print(gosrpm.gorpmname(rpm.expand("%1")))
 %gometa(az:svi) %{lua:
 print(           "BuildRequires: go-rpm-macros\\n")
 print(rpm.expand("ExclusiveArch: %{go_arches}\\n"))
-local   rpmmacros =  require "rpmmacros.common"
-local      gosrpm =  require "rpmmacros.gosrpm"
+local      fedora =  require "fedora.common"
+local          go =  require "fedora.srpm.go"
 local     verbose =  rpm.expand("%{-v}") ~= ""
 local informative =  rpm.expand("%{-i}") ~= ""
 local      silent =  rpm.expand("%{-s}") ~= ""
 local  processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 if processall then
-  for _,s in pairs(rpmmacros.getsuffixes("goipath")) do
-    gosrpm.gometa(s,verbose,informative,silent)
+  for _,s in pairs(fedora.getsuffixes("goipath")) do
+    go.gometa(s,verbose,informative,silent)
   end
 else
-  gosrpm.gometa(rpm.expand("%{-z*}"),verbose,informative,silent)
+  go.gometa(rpm.expand("%{-z*}"),verbose,informative,silent)
 end
 }
