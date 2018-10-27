@@ -218,27 +218,29 @@ end
 # When invoked several times with different file list names, it will attribute
 # directories to the first file list that makes use of them.
 %goinstall(z:ai:b:s:o:O:ve:d:t:rV:T:C:B:p:g:) %{lua:
-local     fedora =  require "fedora.common"
-local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local         fedora =  require "fedora.common"
+local     processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local     myenvflags =  rpm.expand('%{?-i} %{?-v} %{?-V} %{?-T} %{?-C} %{?-B}')
+local myinstallflags =  rpm.expand('%{!-i:-i "%%{currentgoipath}" }'                     ..
+                                   '%{!-b:-b "%%{gobuilddir}/bin" }'                     ..
+                                   '%{!-s:-s "%%{gobuilddir}" }'                         ..
+                                   '%{!-o:-o "%%{currentgofilelist}" }'                  ..
+                                   '%{!-O:-O "%%{goworkdir}" }'                          ..
+                                   '%{!-V:-V "%{version}-%{release}" }'                  ..
+                                   '%{!-T:%%{?currenttag:    -T "%%{?currenttag}" }}'    ..
+                                   '%{!-C:%%{?currentcommit: -C "%%{?currentcommit}" }}' ..
+                                   '%{!-B:%%{?currentbranch: -B "%%{?currentbranch}" }}' ..
+                                   '%{!-p:-p "%{buildroot}" }'                           ..
+                                   '%{!-g:-g "%{gopath}" }'                              ..
+                                   '%{?goinstallflags} %{?**}')
 -- Main function
 local function process(suffix)
   local zsuffix = ""
   if (suffix ~= "") and (suffix ~= nil) then
         zsuffix = "-z " .. suffix .. " "
   end
-  print(rpm.expand('%goenv ' .. zsuffix .. '%{?-i} %{?-v} %{?-V} %{?-T} %{?-C} %{?-B}\\n'          ..
-                   'go-rpm-integration install %{!-i:-i "%{currentgoipath}" }'                     ..
-                                              '%{!-b:-b "%{gobuilddir}/bin" }'                     ..
-                                              '%{!-s:-s "%{gobuilddir}" }'                         ..
-                                              '%{!-o:-o "%{currentgofilelist}" }'                  ..
-                                              '%{!-O:-O "%{goworkdir}" }'                          ..
-                                              '%{!-V:-V "%{version}-%{release}" }'                 ..
-                                              '%{!-T:%{?currenttag:    -T "%{?currenttag}" }}'     ..
-                                              '%{!-C:%{?currentcommit: -C "%{?currentcommit}" }}'  ..
-                                              '%{!-B:%{?currentbranch: -B "%{?currentbranch}" }}'  ..
-                                              '%{!-p:-p "%{buildroot}" }'                          ..
-                                              '%{!-g:-g "%{gopath}" }'                             ..
-                                              '%{?goinstallflags} %{?**} \\n'))
+  print(rpm.expand('%goenv ' .. zsuffix          .. myenvflags     .. '\\n' ..
+                   'go-rpm-integration install ' .. myinstallflags .. '\\n'))
 end
 -- Main loop
 if processall then
@@ -274,28 +276,30 @@ end
 #                     recursive (subdirectories are excluded)
 # -r <regexp>         exclude files matching <regexp>,
 %gocheck(z:ai:b:s:vd:t:rV:T:C:B:p:g:w) %{lua:
-local     fedora =  require "fedora.common"
-local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local       fedora =  require "fedora.common"
+local   processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local   myenvflags =  rpm.expand('%{?-i} %{?-v} %{?-V} %{?-T} %{?-C} %{?-B}')
+local mycheckflags =  rpm.expand('%{!-i:-i "%%{currentgoipath}" }'                     ..
+                                 '%{!-b:-b "%%{gobuilddir}/bin" }'                     ..
+                                 '%{!-s:-s "%%{gobuilddir}" }'                         ..
+                                 '%{!-V:-V "%{version}-%{release}" }'                  ..
+                                 '%{!-T:%%{?currenttag:    -T "%%{?currenttag}" }}'    ..
+                                 '%{!-C:%%{?currentcommit: -C "%%{?currentcommit}" }}' ..
+                                 '%{!-B:%%{?currentbranch: -B "%%{?currentbranch}" }}' ..
+                                 '%{!-p:-p "%{buildroot}" }'                           ..
+                                 '%{!-g:-g "%{gopath}" }'                              ..
+                                 '%{?gocheckflags} %{?**}')
 -- Main function
 local function process(suffix)
   local zsuffix = ""
   if (suffix ~= "") and (suffix ~= nil) then
         zsuffix = "-z " .. suffix .. " "
   end
-  print(rpm.expand('%goenv ' .. zsuffix .. '%{?-i} %{?-v} %{?-V} %{?-T} %{?-C} %{?-B}\\n'        ..
-                   '%{?currentgoldflags:LDFLAGS="${LDFLAGS}%{?currentgoldflags}" }'              ..
-                   '%{?gotestflags:GO_TEST_FLAGS="%{gotestflags}" }'                             ..
-                   '%{?gotestextldflags:GO_TEST_EXT_LD_FLAGS="%{gotestextldflags}" }'            ..
-                   'go-rpm-integration check %{!-i:-i "%{currentgoipath}" }'                     ..
-                                            '%{!-b:-b "%{gobuilddir}/bin" }'                     ..
-                                            '%{!-s:-s "%{gobuilddir}" }'                         ..
-                                            '%{!-V:-V "%{version}-%{release}" }'                 ..
-                                            '%{!-T:%{?currenttag:    -T "%{?currenttag}" }}'     ..
-                                            '%{!-C:%{?currentcommit: -C "%{?currentcommit}" }}'  ..
-                                            '%{!-B:%{?currentbranch: -B "%{?currentbranch}" }}'  ..
-                                            '%{!-p:-p "%{buildroot}" }'                          ..
-                                            '%{!-g:-g "%{gopath}" }'                             ..
-                                            '%{?gocheckflags} %{?**} \\n'))
+  print(rpm.expand('%goenv ' .. zsuffix        .. myenvflags   .. '\\n'               ..
+                   '%{?currentgoldflags:LDFLAGS="${LDFLAGS}%{?currentgoldflags}" }'   ..
+                   '%{?gotestflags:GO_TEST_FLAGS="%{gotestflags}" }'                  ..
+                   '%{?gotestextldflags:GO_TEST_EXT_LD_FLAGS="%{gotestextldflags}" }' ..
+                   'go-rpm-integration check ' .. mycheckflags .. '\\n'))
 end
 -- Main loop
 if processall then
