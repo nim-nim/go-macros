@@ -28,7 +28,7 @@
 %go_arches       %{golang_arches} %{gccgo_arches}
 
 # Where to set GOPATH for builds
-%gopath          %{_datadir}/gocode
+%gopath          @@GOPATH@@
 
 # Define go_compilers macro to signal go-compiler package is available
 %go_compiler     1
