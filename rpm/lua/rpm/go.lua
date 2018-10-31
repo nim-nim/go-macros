@@ -44,9 +44,9 @@ local function goenv(suffix, goipath, verbose, usermetadata)
     fedora.safeset("gofilelist" .. suffix, rpm.expand("%gorpmname %{goipath" .. suffix .. "}") .. "-%{gofilelist}",       verbose)
   end
   if rpm.expand("%{goipath" .. suffix .. "}") ~= rpm.expand(goipath) then
-    fedora.explicitset("thisgofilelelist",  rpm.expand("%gorpmname " .. goipath)               .. "-%{gofilelist}",       verbose)
+    fedora.explicitset("thisgofilelist",   rpm.expand("%gorpmname " .. goipath)                .. "-%{gofilelist}",       verbose)
   else
-    fedora.explicitset("thisgofilelelist", "%{gofilelist" .. suffix .. "}",                                               verbose)
+    fedora.explicitset("thisgofilelist",   "%{gofilelist"  .. suffix .. "}",                                              verbose)
   end
   fedora.safeset( "gosourcedir" .. suffix, "%{?extractdir" .. suffix .. ":%{_builddir}/%{extractdir" .. suffix .. "}}" ..
                                           "%{!?extractdir" .. suffix .. ":%{goworkdir}}",                                 verbose)
