@@ -224,7 +224,7 @@ local     myenvflags =  rpm.expand('%{?-i} %{?-v} %{?-V} %{?-T} %{?-C} %{?-B}')
 local myinstallflags =  rpm.expand('%{!-i:-i "%%{currentgoipath}" }'                     ..
                                    '%{!-b:-b "%%{gobuilddir}/bin" }'                     ..
                                    '%{!-s:-s "%%{gobuilddir}" }'                         ..
-                                   '%{!-o:-o "%%{currentgofilelist}" }'                  ..
+                                   '%{!-o:-o "%%{thisgofilelist}" }'                     ..
                                    '%{!-O:-O "%%{goworkdir}" }'                          ..
                                    '%{!-V:-V "%{version}-%{release}" }'                  ..
                                    '%{!-T:%%{?currenttag:    -T "%%{?currenttag}" }}'    ..
