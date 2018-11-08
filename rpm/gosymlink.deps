@@ -127,15 +127,12 @@ readmetadata() {
 }
 
 # Find the best .goipath match and load it
-findlockfile() {
+findlockdir() {
   local lt="$1"
   while [[ "${lt}" != "${prefix}${gopath}/src" && ! -e "${lt}/.goipath" ]] ; do
     lt=$(dirname ${lt})
   done
-  if [[ -e "${lt}/.goipath" ]] ; then
-    readmetadata "${lt}/.goipath"
-    echo "${lt}"
-  fi
+  [[ -e "${lt}/.goipath" ]] && echo "${lt}" || :
 }
 
 # A symlink can point to a whole directory tree, but go.attr will only
@@ -150,15 +147,16 @@ processlink() {
   local nexttarget=$(resolvelink "$2")
   local linktarget=$(ultimateresolvelink "${nexttarget}")
   if isgopathdir "${linktarget}" ; then
+    local lockdir=$(findlockdir "${linktarget}")
+    [[ -e "${lockdir}/.goipath" ]] && readmetadata "${lockdir}/.goipath"
     case ${action} in
-      provides) findlockfile "${linktarget}" > /dev/null
-                find "${linktarget}" -type d -print | while read subdir ; do
+      provides) find "${linktarget}" -type d -print | while read subdir ; do
                   provides    "${link}${subdir#${linktarget}}"
                 done
                 find "${linktarget}" -type l -print | while read sublink ; do
                   processlink "${link}${sublink#${linktarget}}" "${sublink}"
                 done ;;
-      requires) requires $(findlockfile "${linktarget}") ;;
+      requires) requires "${lockdir}" ;;
     esac
   fi
 }
