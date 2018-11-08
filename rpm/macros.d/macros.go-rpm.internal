@@ -79,7 +79,7 @@ if [[ -n "${godocs}" ]] ; then
 fi
 )
 (
-%define listfiles_inc %{?currentgolicences}
+%define listfiles_inc %{?currentgolicenses}
 %define listfiles_ex  %{?currentgolicensesex}
 golicenses=$(%listfiles
 )
