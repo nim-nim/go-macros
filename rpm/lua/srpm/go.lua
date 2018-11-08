@@ -20,9 +20,9 @@
 
 -- Sanitize a Go import path that can then serve as rpm package name
 -- Mandatory parameter: a Go import path
-local function gorpmname(goipath)
+local function rpmname(goipath)
   -- lowercase and end with '/'
-  goname       = string.lower(goipath .. "/")
+  goname       = string.lower(rpm.expand(goipath) .. "/")
   -- remove eventual protocol prefix
   goname       = string.gsub(goname, "^http(s?)://",         "")
   -- remove eventual .git suffix
@@ -65,7 +65,7 @@ end
 
 -- The gometa macro main processing function
 -- See the documentation in the macros.go-srpm file for argument description
-local function gometa(suffix, verbose, informative, silent)
+local function meta(suffix, verbose, informative, silent)
   local  fedora = require "fedora.common"
   local   forge = require "fedora.srpm.forge"
   local zsuffix = ""
@@ -84,13 +84,18 @@ local function gometa(suffix, verbose, informative, silent)
   if (spec["goipath"] == "") then
     rpm.expand("%{error:Please set the Go import path in the %%{goipath" .. suffix .. "} variable before calling %%gometa" .. zsuffix .. "!}")
   end
+  local cleangoipath = string.gsub(spec["goipath"], "^http(s?)://", "")
+  cleangoipath       = string.gsub(cleangoipath,    "/+$",          "")
+  if (cleangoipath ~= spec["goipath"]) then
+    fedora.explicitset(goipath .. suffix, cleangoipath)
+  end
   if (spec["forgeurl"] ~= "") then
     fedora.safeset("gourl"    .. suffix, "%{forgeurl"        .. suffix .. "}",verbose)
   else
     fedora.safeset("gourl"    .. suffix, "https://%{goipath" .. suffix .. "}",verbose)
     fedora.safeset("forgeurl" .. suffix, "%{gourl"           .. suffix .. "}",verbose)
   end
-  forge.forgemeta(suffix, verbose, informative, silent)
+  forge.meta(suffix, verbose, informative, silent)
   if (rpm.expand("%{?forgesource" .. suffix .. "}") ~= "") then
     fedora.safeset("gosource" .. suffix, "%{forgesource" .. suffix .. "}",verbose)
   else
@@ -106,6 +111,6 @@ local function gometa(suffix, verbose, informative, silent)
 end
 
 return {
-  gorpmname = gorpmname,
-  gometa    = gometa,
+  rpmname = rpmname,
+  meta    = meta,
 }

@@ -1,0 +1,92 @@
+# Copyright © 2018 Nicolas Mailhot <nim@fedoraproject.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# RPM macros for Go packages.
+#
+# Internal utility macros
+# Direct use in spec file is not supported
+
+%__godevelpkg() %{expand:
+%package     -n %{currentgodevelname}
+Summary:        %{currentgodevelsummary}
+BuildRequires:  go-rpm-macros
+%{?currentgodevelheader}
+%description -n %{currentgodevelname}
+%(%cleandescription << EOF_DESCR
+%{?currentgodeveldescription}
+EOF_DESCR)
+}
+
+%__gocompatpkg() %{expand:
+%package     -n %{currentgocompatname}
+Summary:        %{currentgocompatsummary}
+BuildRequires:  go-rpm-macros
+%{?currentgocompatheader}
+%description -n %{currentgocompatname}
+%(%cleandescription << EOF_DESCR
+%{?currentgocompatdescription}
+EOF_DESCR)
+}
+
+%__godevelinstall(-i:v) %{expand:
+(
+%define __godevelinstall_ipath %{-i*}
+cd "%{gobuilddir}/src/%{__godevelinstall_ipath}"
+%define listfiles_inc %{?currentgosupfiles}
+%define listfiles_ex  %{?currentgosupfilesex}
+gosupfiles=$(%listfiles
+)
+go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
+                           -b "%{gobuilddir}/bin"                    \\
+                           -s "%{gobuilddir}"                        \\
+                           -o "%{currentgodevelfilelist}"            \\
+                           -O "%{goworkdir}"                         \\
+                           -V "%{version}-%{release}"                \\
+                           %{?currenttag:    -T "%{?currenttag}"}    \\
+                           %{?currentcommit: -C "%{?currentcommit}"} \\
+                           %{?currentbranch: -B "%{?currentbranch}"} \\
+                           -p "%{buildroot}"                         \\
+                           -g "%{gopath}"                            \\
+                           %{?currentgoipathesex}                    \\
+                           %{?currentgoextensions}                   \\
+                           %{?goinstallflags}                        \\
+                           %{-v} ${gosupfiles}
+)
+}
+
+%__godevelinstalldoc() %{expand:
+(
+%define listfiles_inc %{?currentgodocs}
+%define listfiles_ex  %{?currentgodocsex}
+godocs=$(%listfiles
+)
+if [[ -n "${godocs}" ]] ; then
+  while IFS= read -r -d $'\\n' f ; do
+    echo %doc \\""${f}"\\"     >> "%{goworkdir}/%{currentgodevelfilelist}"
+  done <<< ${godocs}
+fi
+)
+(
+%define listfiles_inc %{?currentgolicenses}
+%define listfiles_ex  %{?currentgolicensesex}
+golicenses=$(%listfiles
+)
+if [[ -n "${golicenses}" ]] ; then
+  while IFS= read -r -d $'\\n' f ; do
+    echo "%"license \\"${f}\\" >> "%{goworkdir}/%{currentgodevelfilelist}"
+  done <<< ${golicenses}
+fi
+)
+}

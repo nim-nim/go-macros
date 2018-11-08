@@ -18,26 +18,12 @@ usage() {
 cat >&2 << EOF_USAGE
 Usage: $0 <action> [ [-h] ]
                    [ [-p <prefix>] [-g <go path>] ]
-                   [ [-v <version>] ] [ [-a <attribute>] ]
 
 <action>             should be one of: provides, requires
 
 Most actions accept the same set of arguments, and will silently ignore those
 that do not apply to a specific action. Unless specified otherwise, all
 arguments are optional.
-
-“provides”-specific arguments:
-
--v <version string>: tag the provides with <version string>
--a <attribute>:      an attribute to add to the provides, for example
-                     -a "(commit=XXXX)"
-                     -a "(branch=YYYY)"
-                     -a "(tag=rx.y.z-alpha1)"
-                     can be specified several times
-
-“requires”-specific arguments:
-
--v <version string>: tag symbolink link target requires with <version string>
 
 Common arguments:
 
@@ -53,7 +39,6 @@ action=''
 version=''
 prefix=''
 gopath=/usr/share/gocode
-declare -A attributes
 
 if [[ $# -eq 0 ]] ; then
   usage
@@ -80,12 +65,6 @@ while [ $# -gt 0 ] ; do
     -h|--help)                      usage ;;
     -p|--prefix)                    prefix=$(realpath -sm "$2")  ; shift;;
     -g|--go-path)                   gopath="$2"                  ; shift;;
-    -v|--version)                   version="$2"                 ; shift;;
-    -a|--attribute)                 IFS=')' read -r -a newattrs <<< "$2"
-                                      for index in "${!newattrs[@]}" ; do
-                                        newattrs[index]=${newattrs[index]#\(}
-                                        attributes[${newattrs[index]%%=*}]=${newattrs[index]#*=}
-                                    done                         ; shift;;
     (--)          shift; break;;
     (-*)          usage ;;
     (*)           break;;
@@ -93,24 +72,21 @@ while [ $# -gt 0 ] ; do
   shift
 done
 
-deco=( "" )
-for key in "${!attributes[@]}"; do
-  [ -n "${attributes[$key]}" ] && deco+=( "($key=${attributes[$key]})" )
-done
-
-
 # Convert paths within gopath to version-constrained provides
 provides() {
- local package="${1#${prefix}${gopath}/src/}"
- for index in "${!deco[@]}" ; do
-   echo "golang(${package})${deco[index]}${version:+ = ${version}}"
- done
+local p="golang(${1#${prefix}${gopath}/src/})"
+echo "${p}${metadata[version]:+ = ${metadata[version]}}"
+for m in "${!metadata[@]}" ; do
+  if [[ "${m}" != "version" ]] ; then
+    echo "${p}(${m}=${metadata[${m}]})${metadata[version]:+ = ${metadata[version]}}"
+  fi
+done
 }
 
-# Convert paths within gopath to version-constrained requires
+# Convert paths within gopath to version-constrained provides
 requires() {
-  local package="${1#${prefix}${gopath}/src/}"
-  echo "golang-ipath(${package})${version:+ = ${version}}"
+local r="golang(${1#${prefix}${gopath}/src/})"
+echo "${r}${metadata[version]:+ = ${metadata[version]}}"
 }
 
 # Resolve a symlink target in presence of a build root
@@ -138,6 +114,27 @@ isgopathdir() {
   fi
 }
 
+# Read version info stored in .goipath
+readmetadata() {
+  medadatafile="${1}"
+  unset metadata
+  declare -g -A metadata
+  for m in version tag commit branch ; do
+    v=$(grep "^${m}\:" "${medadatafile}" | head -1)
+    v="${v#${m}:}"
+    [[ -n "${v}" ]] && metadata["${m}"]="${v}"
+  done
+}
+
+# Find the best .goipath match and load it
+findlockdir() {
+  local lt="$1"
+  while [[ "${lt}" != "${prefix}${gopath}/src" && ! -e "${lt}/.goipath" ]] ; do
+    lt=$(dirname ${lt})
+  done
+  [[ -e "${lt}/.goipath" ]] && echo "${lt}" || :
+}
+
 # A symlink can point to a whole directory tree, but go.attr will only
 # trigger on the root symlink.
 # Therefore, check the symlink points within the processed import path, then
@@ -150,6 +147,8 @@ processlink() {
   local nexttarget=$(resolvelink "$2")
   local linktarget=$(ultimateresolvelink "${nexttarget}")
   if isgopathdir "${linktarget}" ; then
+    local lockdir=$(findlockdir "${linktarget}")
+    [[ -e "${lockdir}/.goipath" ]] && readmetadata "${lockdir}/.goipath"
     case ${action} in
       provides) find "${linktarget}" -type d -print | while read subdir ; do
                   provides    "${link}${subdir#${linktarget}}"
@@ -157,13 +156,7 @@ processlink() {
                 find "${linktarget}" -type l -print | while read sublink ; do
                   processlink "${link}${sublink#${linktarget}}" "${sublink}"
                 done ;;
-      requires) while [[      "${linktarget}" != "${prefix}${gopath}/src" && \
-                         ! -e "${linktarget}/.goipath" ]] ; do
-                  linktarget=$(dirname ${linktarget})
-                done
-                if [[ -e "${linktarget}/.goipath" ]] ; then
-                  requires "${linktarget}"
-                fi ;;
+      requires) requires "${lockdir}" ;;
     esac
   fi
 }

@@ -37,7 +37,7 @@
 # Mandatory parameter: a Go import path
 %gorpmname() %{lua:
 local go = require "fedora.srpm.go"
-print(go.gorpmname(rpm.expand("%1")))
+print(go.rpmname(rpm.expand("%1")))
 }
 
 # Map Go information to rpm metadata. This macro will compute default spec
@@ -108,9 +108,9 @@ local      silent =  rpm.expand("%{-s}") ~= ""
 local  processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 if processall then
   for _,s in pairs(fedora.getsuffixes("goipath")) do
-    go.gometa(s,verbose,informative,silent)
+    go.meta(s,verbose,informative,silent)
   end
 else
-  go.gometa(rpm.expand("%{-z*}"),verbose,informative,silent)
+  go.meta(rpm.expand("%{-z*}"),verbose,informative,silent)
 end
 }
