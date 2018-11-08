@@ -16,5 +16,5 @@ ln -fs "%{gobuilddir}/bin" _bin
 
 %gochecks(z:ai:b:s:vd:t:rV:T:C:B:p:g:w) %{expand:
 %{warn:%%gochecks is obsolete, use %%gocheck in %%check instead!}
-%gocheck %{?**}
+%gocheck %{-z} %{-a} %{-i} %{-b} %{-s} %{-v} %{-d} %{-t} %{-r} %{-V} %{-T} %{-C} %{-B} %{-p} %{-g} %{-w}
 }

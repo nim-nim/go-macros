@@ -306,9 +306,9 @@ for m in version tag commit branch ; do
     echo "${m}:${metadata[${m}]}" >> "${medadatafile}"
   fi
 done
-[[ "${#flags_d[@]}" != "0" ]] && printf 'excludedir:%s\n'   "${flags_d[@]}" >> "${medadatafile}"
-[[ "${#flags_t[@]}" != "0" ]] && printf 'excludetree:%s\n'  "${flags_t[@]}" >> "${medadatafile}"
-[[ "${#flags_r[@]}" != "0" ]] && printf 'excluderegex:%s\n' "${flags_r[@]}" >> "${medadatafile}"
+[[ "${#flags_d[@]}" != "0" ]] && printf 'excludedir:%s\n'   "${flags_d[@]}" >> "${medadatafile}" || :
+[[ "${#flags_t[@]}" != "0" ]] && printf 'excludetree:%s\n'  "${flags_t[@]}" >> "${medadatafile}" || :
+[[ "${#flags_r[@]}" != "0" ]] && printf 'excluderegex:%s\n' "${flags_r[@]}" >> "${medadatafile}" || :
 }
 
 readmetadata() {
