@@ -136,7 +136,8 @@ done
 
 provides() {
 local goipath="${1}"
-fullprovides golang-ipath "${goipath}"
+fullprovides golang-ipath   "${goipath}"
+fullprovides golang-symlink "${goipath}"
 GOPATH="${gosourcedir}" \
   golist --provided --package-path "${goipath}" $(expandflags) |\
     while read -r -d $'\n' prov ; do
