@@ -66,6 +66,14 @@ go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
 )
 }
 
+%__gocompatinstall() %{expand:
+install -m 0755 -d "%{gobuilddir}/src/%(dirname %{currentgoaltipath})"
+ln -s              "%{gobuilddir}/src/%{currentgocompatipath}"     "%{gobuilddir}/src/%{currentgoaltipath}"
+install -m 0755 -d "%{buildroot}%{gopath}/src/%(dirname %{currentgoaltipath})"
+ln -s              "%{gopath}/src/%{currentgocompatipath}" "%{buildroot}%{gopath}/src/%{currentgoaltipath}"
+echo               "%{gopath}/src/%{currentgoaltipath}" >> "%{goworkdir}/%{currentgocompatfilelist}"
+}
+
 %__godevelinstalldoc() %{expand:
 (
 %define listfiles_inc %{?currentgodocs}
