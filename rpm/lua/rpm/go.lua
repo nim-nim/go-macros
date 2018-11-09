@@ -226,8 +226,8 @@ local function singleinstall(kind, suffix, verbose)
       gocompatipath = rpm.expand("%{currentgocompatipath}")
       for _, goaltipath in ipairs(goaltipathes) do
         -- We could add the symlinks in %prep but that would let packagers ignore import path problems in the project itself
-        print(rpm.expand('install -m 0755 -vd "%{gobuilddir}/src/%(dirname ' .. goaltipath .. ')"\n'                                ..
-                         'ln -s         "%{gobuilddir}/src/' .. gocompatipath .. '" "%{gobuilddir}/src/' .. goaltipath .. '"\n'     ..
+        print(rpm.expand('install -m 0755 -vd "%{gobuilddir}/src/%(dirname '         .. goaltipath .. ')"\n'                        ..
+                         'ln -s         "%{gobuilddir}/src/' .. gocompatipath .. '" "%{gobuilddir}/src/'     .. goaltipath .. '"\n' ..
                          'install -m 0755 -vd "%{buildroot}%{gopath}/src/%(dirname ' .. goaltipath .. ')"\n'                        ..
                          'ln -s         "%{gopath}/src/' .. gocompatipath .. '" "%{buildroot}%{gopath}/src/' .. goaltipath .. '"\n' ..
                          'echo          "%{gopath}/src/' .. goaltipath    .. '"   >> "%{goworkdir}/%{currentgocompatfilelist}"\n'))
