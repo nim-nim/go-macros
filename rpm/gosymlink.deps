@@ -90,7 +90,12 @@ fi
 
 readmetadata() {
 medadatafile="${1}"
-popmetadata
+unset metadata
+declare -g -A metadata
+flags_d=()
+flags_t=()
+flags_r=()
+flags_e=()
 for m in version tag commit branch ; do
   v=$(grep "^${m}\:" "${medadatafile}" | head -1)
   v="${v#${m}:}"
