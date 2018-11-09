@@ -84,6 +84,11 @@ local function meta(suffix, verbose, informative, silent)
   if (spec["goipath"] == "") then
     rpm.expand("%{error:Please set the Go import path in the %%{goipath" .. suffix .. "} variable before calling %%gometa" .. zsuffix .. "!}")
   end
+  local cleangoipath = string.gsub(spec["goipath"], "^http(s?)://", "")
+  cleangoipath       = string.gsub(cleangoipath,    "/+$",          "")
+  if (cleangoipath ~= spec["goipath"]) then
+    fedora.explicitset(goipath .. suffix, cleangoipath)
+  end
   if (spec["forgeurl"] ~= "") then
     fedora.safeset("gourl"    .. suffix, "%{forgeurl"        .. suffix .. "}",verbose)
   else
