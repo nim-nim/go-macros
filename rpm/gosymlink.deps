@@ -39,6 +39,11 @@ action=''
 version=''
 prefix=''
 gopath=/usr/share/gocode
+declare -A metadata
+flags_d=()
+flags_t=()
+flags_r=()
+flags_e=()
 
 if [[ $# -eq 0 ]] ; then
   usage
@@ -72,15 +77,61 @@ while [ $# -gt 0 ] ; do
   shift
 done
 
-# Convert paths within gopath to version-constrained provides
-provides() {
-local p="golang(${1#${prefix}${gopath}/src/})"
-echo "${p}${metadata[version]:+ = ${metadata[version]}}"
+dedupearray() {
+local -n arrayref="${1}"
+if [[ "${#arrayref[@]}" != "0" ]] ; then
+  local temparray=( "${arrayref[@]}" )
+  arrayref=()
+  while read -r -d $'\0' l ; do
+    arrayref+=( "${l}" )
+  done < <(printf "%s\0" "${temparray[@]}" | sort -z -u)
+fi
+}
+
+readmetadata() {
+medadatafile="${1}"
+popmetadata
+for m in version tag commit branch ; do
+  v=$(grep "^${m}\:" "${medadatafile}" | head -1)
+  v="${v#${m}:}"
+  [[ -n "${v}" ]] && metadata["${m}"]="${v}"
+done
+while read -r -d $'\n' l ; do
+  flags_d+=( "${l#excludedir:}" )
+done < <(grep "^excludedir:" "${medadatafile}")
+dedupearray flags_d
+while read -r -d $'\n' l ; do
+  flags_t+=( "${l#excludetree:}" )
+done < <(grep "^excludetree:" "${medadatafile}")
+dedupearray flags_t
+while read -r -d $'\n' l ; do
+  flags_r+=( "${l#excluderegex:}" )
+done < <(grep "^excluderegex:" "${medadatafile}")
+dedupearray flags_r
+}
+
+expandflags() {
+echo ${flags_d[@]/#/ -d } ${flags_t[@]/#/ -t } ${flags_r[@]/#/ -r } ${flags_e[@]/#/ -e }
+}
+
+fullprovides() {
+local fp="${1}(${2})"
+echo "${fp}${metadata[version]:+ = ${metadata[version]}}"
 for m in "${!metadata[@]}" ; do
   if [[ "${m}" != "version" ]] ; then
-    echo "${p}(${m}=${metadata[${m}]})${metadata[version]:+ = ${metadata[version]}}"
+    echo "${fp}(${m}=${metadata[${m}]})${metadata[version]:+ = ${metadata[version]}}"
   fi
 done
+}
+
+provides() {
+local goipath="${1}"
+fullprovides golang-ipath "${goipath}"
+GOPATH="${prefix}${gopath}" \
+  golist --provided --package-path "${goipath}" $(expandflags) |\
+    while read -r -d $'\n' prov ; do
+      fullprovides golang "${prov}"
+    done
 }
 
 # Convert paths within gopath to version-constrained provides
@@ -114,18 +165,6 @@ isgopathdir() {
   fi
 }
 
-# Read version info stored in .goipath
-readmetadata() {
-  medadatafile="${1}"
-  unset metadata
-  declare -g -A metadata
-  for m in version tag commit branch ; do
-    v=$(grep "^${m}\:" "${medadatafile}" | head -1)
-    v="${v#${m}:}"
-    [[ -n "${v}" ]] && metadata["${m}"]="${v}"
-  done
-}
-
 # Find the best .goipath match and load it
 findlockdir() {
   local lt="$1"
@@ -150,12 +189,7 @@ processlink() {
     local lockdir=$(findlockdir "${linktarget}")
     [[ -e "${lockdir}/.goipath" ]] && readmetadata "${lockdir}/.goipath"
     case ${action} in
-      provides) find "${linktarget}" -type d -print | while read subdir ; do
-                  provides    "${link}${subdir#${linktarget}}"
-                done
-                find "${linktarget}" -type l -print | while read sublink ; do
-                  processlink "${link}${sublink#${linktarget}}" "${sublink}"
-                done ;;
+      provides) provides "${link#${prefix}${gopath}/src/}" ;;
       requires) requires "${lockdir}" ;;
     esac
   fi
@@ -169,6 +203,6 @@ processlink() {
 # inputs, even though modern rpm invokes it separately for each directory.
 while read dir ; do
   if [[ -L $dir ]] ; then
-    processlink "$dir" "$dir"
+    processlink "$dir"
   fi
 done | sort -u | grep -v '/\([._]\)\?\(internal\|testdata\|vendor\)\([/)]\)'
