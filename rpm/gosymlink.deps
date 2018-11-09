@@ -183,7 +183,7 @@ findlockdir() {
 # to the symlink tip within the build root as second argument.
 processlink() {
   local link="$1"
-  local nexttarget=$(resolvelink "$2")
+  local nexttarget=$(resolvelink "$1")
   local linktarget=$(ultimateresolvelink "${nexttarget}")
   if isgopathdir "${linktarget}" ; then
     local lockdir=$(findlockdir "${linktarget}")
@@ -205,4 +205,4 @@ while read dir ; do
   if [[ -L $dir ]] ; then
     processlink "$dir"
   fi
-done | sort -u | grep -v '/\([._]\)\?\(internal\|testdata\|vendor\)\([/)]\)'
+done
