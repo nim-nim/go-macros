@@ -85,7 +85,7 @@ done
 
 # Convert paths within gopath to version-constrained provides
 requires() {
-local r="golang(${1#${prefix}${gopath}/src/})"
+local r="golang-ipath(${1#${prefix}${gopath}/src/})"
 echo "${r}${metadata[version]:+ = ${metadata[version]}}"
 }
 
