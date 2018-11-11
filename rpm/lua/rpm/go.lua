@@ -129,7 +129,8 @@ local function develenv(suffix, verbose)
   fedora.safeset("godevelfilelist"    .. suffix, go.rpmname(goipath) .. "-%{gofilelist}",                     verbose)
   fedora.safeset("godevelsummary"     .. suffix, "%{summary}",                                                verbose)
   fedora.safeset("godeveldescription" .. suffix, "%{?common_description}",                                    verbose)
-  local postdescr = "\n\nThis package provides the following Go import pathes:"
+	local postdescr = "\n\nThis package contains the source code needed for building packages that reference" ..
+                    "the following Go import pathes:"
   postdescr = postdescr .. string.gsub(goipathes, "([^%s]+)", "\n – %1")
   fedora.explicitset("currentgodeveldescription", "%{expand:%{godeveldescription" .. suffix .. "}" ..
                                                   postdescr .. "}",                                           verbose)
@@ -151,18 +152,22 @@ local function compatenv(suffix, rpmname, goaltipathes, verbose)
   fedora.safeset("gocompatipath"   .. suffix,      "%{goipath" .. suffix .. "}",                              verbose)
   fedora.safeset("gocompatsummary" .. suffix,      "%{summary}",                                              verbose)
   fedora.safeset("gocompatdescription" .. suffix,  "%{?common_description}",                                  verbose)
-  fedora.setcurrent( {"gocompatipath", "gocompatheader", "gocompatsummary"}, suffix,                          verbose)
+  fedora.setcurrent( {"gocompatipath", "gocompatsummary"}, suffix,                                            verbose)
   fedora.explicitset("currentgoaltipath",         goaltipath,                                                 verbose)
   local postdescr = "\n\nThis package provides symbolic links that alias the following Go import pathes "   ..
                     "to %{currentgocompatipath}:"
+  local posthead = ""
   for _, goaltipath in ipairs(goaltipathes) do
     postdescr = postdescr .. "\n – " .. goaltipath
+    posthead  = posthead  .. "\nObsoletes: " ..  go.rpmname(goaltipath) .. "-devel < %{version}-%{release}"
   end
   postdescr = postdescr .. "\n\nAliasing Go import paths via symbolic links or http redirects is fragile. " ..
                            "If your Go code depends on this package, you should patch it to import "        ..
-                           "%{currentgocompatipath} directly."
+                           "directly %{currentgocompatipath}."
   fedora.explicitset("currentgocompatdescription", "%{expand:%{?gocompatdescription" .. suffix .. "}" ..
                                                    postdescr .. "}",                                          verbose)
+  fedora.explicitset("currentgocompatheader",      "%{expand:%{?gocompatheader" .. suffix .. "}"      ..
+                                                   posthead  .. "}",                                          verbose)
   fedora.explicitset("currentgocompatname",        "compat-" .. rpmname .. "-devel",                          verbose)
   fedora.explicitset("currentgocompatfilelist",    "compat-" .. rpmname .. "-%{gofilelist}",                  verbose)
   if ismain then
