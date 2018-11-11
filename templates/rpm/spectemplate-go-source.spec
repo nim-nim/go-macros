@@ -1,3 +1,5 @@
+# Main template for Go packages.
+#
 # The master Go import path of the project. Take care to identify it
 # accurately, changing it later will be inconvenient:
 #  – it has not necessarily the same value as the repository URL;
@@ -8,24 +10,77 @@
 # fix references to past names in the Go source files, unit tests included. Do
 # this fixing in prep.
 %global goipath  
-
+#
 # gometa is a thin Go-specific wrapper around forgemeta. Therefore, define
 # version, tag, commit… before the gometa line, as you would with forgemeta.
+# Only define the rpm variables actually needed by the spec file.
 # Remember:
 #  – to define %forgeurl, including “https://” prefixing, if the import path
-#    does not match the repository URL;
+#    does not match the repository URL; otherwise it is not necessary,
+%global forgeurl 
 #  – to move the Version: line before the %gometa call if you are packaging a
 #    release.
+Version:         
+%global tag      
+%global commit   
 # Like forgemeta, gometa accepts a “-i” flag to output the rpm variables it
 # reads and sets. Most of those can be overriden before or after the gometa
 # call. If you use “-i” , remove it before committing and pushing to the
 # buildsystem.
-# See the forge templates for more forgemeta documentation.
-#global forgeurl 
-#Version:        
-#global tag      
-#global commit   
+# See the forgemeta templates for detailed documentation.
 %gometa
+
+# A multiline description block shared between subpackages
+%global common_description %{expand:
+}
+
+# rpm variables used to tweak the generated golang-*devel package.
+# Most of them won’t be needed by the average Go spec file.
+#
+# Space-separated list of Go import paths to include. Unless specified
+# otherwise the first element in the list will be used to name the subpackage.
+# If unset, defaults to goipath.
+%global goipathes       
+# Space-separated list of Go import paths to exclude. Usually, subsets of the
+# elements in goipathes.
+%global goipathesex     
+# Force a specific subpackage name. Useful to add a compat prefix when needed.
+%global godevelname     
+# The subpackage summary;
+# (by default, identical to the srpm summary)
+%global godevelsummary  
+# A container for additional subpackage declarations
+%global godevelheader %{expand:
+Requires:  
+Obsoletes: 
+}
+# The subpackage base description;
+# (by default, “common_description”)
+%global godeveldescription %{expand:
+}
+# Space-separated list of shell globs matching the project license files.
+%global golicenses      
+# Space-separated list of shell globs matching files you wish to exclude from
+# license lists.
+%global golicensesex    
+# Space-separated list of shell globs matching the project documentation files.
+# Our rpm macros will pick up .md files by default without this.
+%global godocs          
+# Space-separated list of shell globs matching files you wish to exclude from
+# documentation lists. Only works for %godocs-specified files.
+%global godocsex        
+# Space separated list of extentions that should be included in the devel
+# package in addition to Go default file extensions
+%global goextensions    
+# Space-separated list of shell globs matching other files to include in the
+# devel package
+%global gosupfiles      
+# Space-separated list of shell globs matching other files ou wish to exclude from
+# package lists. Only works with %gosupfiles-specified files.
+%global gosupfilesex    
+# The filelist name associated with the subpackage. Setting this should never
+# be necessary unless the default name clashes with something else.
+%global godevelfilelist 
 
 # The following lines use  go* variables computed by gometa as default values.
 # You can replace them with manual definitions. For example, replace gourl with
@@ -34,13 +89,18 @@
 # you understand the consequences. Otherwise you will just be introducing
 # maintenance-intensive discrepancies in the distribution.
 Name:    %{goname}
+# If not set before
 Version: 
 Release: 1%{?dist}
 Summary: 
 URL:	 %{gourl}
 Source0: %{gosource}
 %description
+%{common_description}
 
+# Generate package declarations for all known kinds of Go subpackages
+# You can replace if with “godevelpkg” to generate Go devel subpackages only
+%gopkg
 
 %prep
 # goprep unpacks the Go source archives and creates the project GOPATH tree
@@ -49,10 +109,12 @@ Source0: %{gosource}
 #    consequences in the rest of the spec.
 #  – use the “-e” flag if you wish to perform extraction yourself, and just use
 #    the GOPATH creation logic.
+%goprep
+#
 # goprep only performs basic vendoring detection. It will miss inventive ways
 # to vendor code. Remove manually missed vendor code, after the goprep line.
-# goprep will not fix upstream sources for you. Since the macro call that
-# follows goprep will start processing those sources, you need to correct them
+# goprep will not fix upstream sources for you. Since all the macro calls that
+# follow goprep assume clean problem-free sources, you need to correct them
 # just after the goprep line:
 #  – replace calls to deprecated import paths with their correct value
 #  – patch code problems
@@ -66,19 +128,23 @@ Source0: %{gosource}
 #  – remove unit tests that import other parts of the loop
 #  – remove code that import other parts of the loop
 # Sometimes one can resolve dependency loops just by splitting specific
-# subdirectories in a separate -devel subpackage.
-%goprep
+# subdirectories in a separate -devel subpackage. See also the devel-multi
+# template.
+#
 # https://github.com/rpm-software-management/rpm/issues/104
+# The following will eventually be split from goprep
 # gobuildrequires computes the build dependencies of the packaged Go code and
 # installs them in the build root. Assuming you fixed source problems after
 # goprep, it should just work.
 # Right now, gobuildrequires only manages version-less Go dependencies. If your
 # project requires a specific dependency version, or something which is not Go
-# code, you need to write the corresponding BuildRequires line manually.
-%gobuildrequires
+# code, you need to declare the corresponding BuildRequires manually as usual.
+#gobuildrequires
 
 %install
-%goinstall
+# Perform installation steps for all known kinds of Go subpackages
+# You can replace if with “godevelinstall” to process Go devel subpackages only
+%gopkginstall
 
 %check
 # gocheck runs all the unit tests found in the project. This is useful to catch
@@ -95,9 +161,9 @@ Source0: %{gosource}
 # to add a comments that explain why each check was disabled before gocheck.
 %gocheck
 
-%files
-%doc
-
+# Generate file sections for all known kinds of Go subpackages
+# You can replace if with “godevelfiles” to process Go devel subpackages only
+%gopkgfiles
 
 
 %changelog
