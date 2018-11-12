@@ -1,6 +1,6 @@
 # This template documents the packaging of Go projects that produce binaries.
 # It does not repeat the documentation of the usual Go spec elements. To learn
-# about those, consult the “go-0-source” and “go-1-alternative-import-path”
+# about those, consult the “go-0-source” and “go-2-alternative-import-path”
 # templates.
 #
 # Building Go binaries is less automated than the rest of our Go packaging and
@@ -12,6 +12,11 @@ Version:
 %global tag      
 %global commit   
 %gometa
+
+# If the documentation files of the various generated subpackages do not
+# conflict you can use the following to avoid copying the same files in separate
+# directories.
+%global _docdir_fmt     %{name}
 
 %global common_description %{expand:
 }
@@ -44,7 +49,7 @@ Obsoletes:
 %global gocompatdescription %{expand:
 }
 
-# If one of the produced binaries is well known it should be used to name the
+# If one of the produced binaries is widely known it should be used to name the
 # package instead of “goname”. Separate built binaries in different subpackages
 # if needed.
 Name:    %{goname}
@@ -69,7 +74,7 @@ Source0: %{gosource}
 # identify how the resulting binary should be named.
 # Nice projects put those in “cmd” subdirectories named after the command that
 # will be built, which is what we will document here, but it is not a general
-# rule.
+# rule. Sometimes the whole “goipath” builds as a single binary.
 for cmd in cmd/* ; do
   %gobuild -o %{gobuilddir}/bin/$(basename $cmd) %{goipath}/$cmd
 done

@@ -44,7 +44,12 @@ Version:
 # Space-separated list of Go import paths to exclude. Usually, subsets of the
 # elements in goipathes.
 %global goipathesex     
-# Force a specific subpackage name. Useful to add a compat prefix when needed.
+# Force a specific subpackage name. For exemple, when you need to package an
+# old code state, you should create a package with the following godevelname:
+# compat-%{goname}-<id>-devel. <id> can be a major version number, a
+# shortened commit hash, or anything else useful to distinguish the compat
+# package. Shortened commits can be computed with:
+#global shortcommit %{lua:print(string.sub(rpm.expand("%{?commit}"), 1, 7))}
 %global godevelname     
 # The subpackage summary;
 # (by default, identical to the srpm summary)
@@ -88,6 +93,9 @@ Obsoletes:
 # careful to only replace go* variables when it adds value to the specfile and
 # you understand the consequences. Otherwise you will just be introducing
 # maintenance-intensive discrepancies in the distribution.
+#
+# When creating a compat package, use compat-%{goname}-<id> like you did for
+# “godevelname”.
 Name:    %{goname}
 # If not set before
 Version: 
@@ -154,8 +162,14 @@ Source0: %{gosource}
 #  – tests that attempt to reconfigure the system,
 #  – tests that rely on a specific app running on the system, like a database
 #    or syslog server.
-# You can disable those tests with the same “-d” “-t” “-r” exclusion flags
-# goinstall uses. If a test is broken for some other reason, you can disable it
+# You can disable those tests with the following exclusion flags, that can be
+# repeated:
+#  – “-d <directory>”     exclude the files contained in <directory>
+#                         not recursive (subdirectories are not excluded)
+#  – “-t <tree root>”     exclude the files contained in <tree root>
+#                         recursive (subdirectories are excluded)
+#  – “-r <regexp>”        exclude files matching <regexp>,
+# If a test is broken for some other reason, you can disable it
 # the same way. However, you should also report the problem upstream.
 # Tracking why a particular test was disabled gets difficult quickly. Remember
 # to add a comments that explain why each check was disabled before gocheck.
@@ -164,7 +178,6 @@ Source0: %{gosource}
 # Generate file sections for all known kinds of Go subpackages
 # You can replace if with “godevelfiles” to process Go devel subpackages only
 %gopkgfiles
-
 
 %changelog
 

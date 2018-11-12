@@ -4,8 +4,8 @@
 # Don’t hesitate to use “rpmspec -P <specfile>” to check the generated code.
 #
 # It does not repeat the documentation of the usual Go spec elements. To learn
-# about those, consult the “go-0-source”, “go-1-alternative-import-path” and
-# “go-3-binary” templates.
+# about those, consult the “go-0-source”, “go-2-alternative-import-path” and
+# “go-4-binary” templates.
 #
 # You can refer to several upstream archives using the “-a” gometa flag and
 # blocks of declarations suffixed by a block number, like with forgemeta.
@@ -36,9 +36,6 @@ Version:
 # specific declaration block only.
 %gometa -a
 
-# If the documentation files of the various generated subpackages do not
-# conflict you can use the following to avoid copying the same files in separate
-# directories.
 %global _docdir_fmt     %{name}
 
 %global common_description %{expand:
@@ -137,26 +134,36 @@ Source1: %{gosource1}
 # “gopkg” will generate all the subpackages package declarations corresponding
 # to the elements declared above.
 # You can replace “gopkg” with “godevelpkg” and “gocompatpkg” calls for finer
-# control. Both of those accept the usual “-a” (process everything) and “-z
-# <number>” (process a specific declaration block) flags. If no flag is
-# specified they only process the zero/nosuffix block.
+# control.
+# “godevelpkg” and “gocompatpkg” accept the usual selection arguments:
+# – “-a”          process everything
+# – “-z <number>” process a specific declaration block
+# If no flag is specified they only process the zero/nosuffix block.
 %gopkg
 
 %prep
-# Accepts “-a” (process everything) and “-z <number>” (process a specific
-# declaration block) flags.
+# “%goprep” and “gobuildrequires” accept the usual selection arguments:
+# – “-a”          process everything
+# – “-z <number>” process a specific declaration block
+# If no flag is specified they only process the zero/nosuffix block.
 %goprep -a
 #gobuildrequires -a
 
 %build
+# When your spec processes multiple Go source archives, you need to call
+# “goenv” with the correct “-z <number>” argument before invoquing “%gobuild”.
+# Otherwise the binaries risk being built with parameters corresponding to
+# another source archive.
 for cmd in cmd/* ; do
   %gobuild -o %{gobuilddir}/bin/$(basename $cmd) %{goipath}/$cmd
 done
 
 %install
-# You can replace “gopkginstall” with  “godevelinstall” and  “gocompatinstall”
-# calls for finer control. Both of those accept the usual “-a” (process
-# everything) and “-z <number>” (process a specific declaration block) flags.
+# You can replace “gopkginstall” with  “godevelinstall” and “gocompatinstall”
+# calls for finer control.
+# “gopkginstall” and “godevelinstall” accept the usual selection arguments:
+# – “-a”          process everything
+# – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.
 %gopkginstall
 
@@ -172,8 +179,10 @@ install -m 0755 -vp %{gobuilddir}/bin/* %{buildroot}%{_bindir}/
 %{_bindir}/*
 
 # You can replace “gopkgfiles” with  “godevelfiles” and  “gocompatfiles”
-# calls for finer control. Both of those accept the usual “-a” (process
-# everything) and “-z <number>” (process a specific declaration block) flags.
+# calls for finer control.
+# “godevelfiles” and “gocompatfiles” accept the usual selection arguments:
+# – “-a”          process everything
+# – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.
 %gopkgfiles
 
