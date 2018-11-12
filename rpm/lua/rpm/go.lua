@@ -145,6 +145,7 @@ end
 -- Set rpm variables related to the processing of a compat-golang-*-devel subpackage
 local function compatenv(suffix, rpmname, goaltipathes, verbose)
   local fedora = require "fedora.common"
+  local     go = require "fedora.srpm.go"
   local ismain = (suffix == "") or (suffix == "0")
   if ismain then
     fedora.zalias(  {"goipath", "gocompatipath", "gocompatdescription", "gocompatsummary", "gocompatheader"}, verbose)
