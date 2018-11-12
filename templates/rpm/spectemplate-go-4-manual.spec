@@ -6,7 +6,7 @@
 # Using this packaging mode is not recommended unless you really need it.
 #
 # This template does not repeat the documentation of the usual Go spec
-# elements. To learn about those, consult the “go-source” template.
+# elements. To learn about those, consult the “go-0-source” template.
 #
 %global goipath  
 %global forgeurl 

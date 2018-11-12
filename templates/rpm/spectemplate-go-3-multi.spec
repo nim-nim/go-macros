@@ -4,8 +4,8 @@
 # Don’t hesitate to use “rpmspec -P <specfile>” to check the generated code.
 #
 # It does not repeat the documentation of the usual Go spec elements. To learn
-# about those, consult the “go-source”, “go-alternative-import-path” and
-# “go-binary” templates.
+# about those, consult the “go-0-source”, “go-1-alternative-import-path” and
+# “go-3-binary” templates.
 #
 # You can refer to several upstream archives using the “-a” gometa flag and
 # blocks of declarations suffixed by a block number, like with forgemeta.

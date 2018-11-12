@@ -1,6 +1,6 @@
 # This template documents the packaging of Go projects that produce binaries.
 # It does not repeat the documentation of the usual Go spec elements. To learn
-# about those, consult the “go-source” and “go-alternative-import-path”
+# about those, consult the “go-0-source” and “go-1-alternative-import-path”
 # templates.
 #
 # Building Go binaries is less automated than the rest of our Go packaging and

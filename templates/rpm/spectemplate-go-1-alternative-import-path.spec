@@ -1,6 +1,6 @@
 # This template documents the packaging of alternative Go import paths. It does
 # not repeat the documentation of the usual Go spec elements. To learn about
-# those, consult the “go-source” template.
+# those, consult the “go-0-source” template.
 #
 # Sometimes Go projects keep importing deprecated import path names, or use
 # forks with different names. Ideally, all codebases should be fixed to use
