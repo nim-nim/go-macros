@@ -59,7 +59,7 @@ go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
                            %{?currentbranch: -B "%{?currentbranch}"} \\
                            -p "%{buildroot}"                         \\
                            -g "%{gopath}"                            \\
-                           %{?currentgoipathesex}                    \\
+                           %{?currentgoipathsex}                     \\
                            %{?currentgoextensions}                   \\
                            %{?goinstallflags}                        \\
                            %{-v} ${gosupfiles}

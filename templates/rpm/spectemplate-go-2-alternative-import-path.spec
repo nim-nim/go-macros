@@ -26,9 +26,8 @@ Version:
 %global common_description %{expand:
 }
 
-
-%global goipathes       
-%global goipathesex     
+%global goipaths        
+%global goipathsex      
 %global godevelname     
 %global godevelsummary  
 %global godevelheader %{expand:
@@ -45,14 +44,14 @@ Obsoletes:
 %global godevelfilelist 
 
 # Space-separated list of import paths to simulate. Without this nothing will happen
-%global goaltipathes     
+%global goaltipaths     
 # rpm variables used to tweak the generated compat-golang-*devel packages.
 # Most of them won’t be needed by the average Go spec file.
 # The import path that will be linked to, if different from “goipath”.
-%global gocompatipath    
+%global gocompatipath   
 # The subpackage summary;
 # (by default, identical to the srpm summary)
-%global gocompatsummary  
+%global gocompatsummary 
 # A container for additional subpackage declarations
 %global gocompatheader %{expand:
 Requires:  

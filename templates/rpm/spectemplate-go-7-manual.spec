@@ -42,7 +42,7 @@ Requires:  %{name} = %{version}-%{release}
 %{common_description}
 
 This package contains the source code needed for building packages that
-reference the following Go import pathes:
+reference the following Go import paths:
  –  %{goipath}
 
 # If you’ve defined an alternative go name
@@ -53,7 +53,7 @@ Obsoletes: %{oldgoname}-devel < %{version}-%{release}
 %description -n compat-%{oldgoname}-devel
 %{common_description}
 
-This package provides symbolic links that alias the following Go import pathes
+This package provides symbolic links that alias the following Go import paths
 to %{goipath}:
  – %{oldgoipath}
 

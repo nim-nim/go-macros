@@ -46,10 +46,10 @@ Version:
 #
 # First golang-*-devel subpackage.
 #
-# If unset, and no “goipathes<number>” is defined in the spec, fallbacks to
+# If unset, and no “goipaths<number>” is defined in the spec, fallbacks to
 # “goipath<number>”
-%global goipathes0       
-%global goipathesex0     
+%global goipaths0        
+%global goipathsex0      
 %global godevelname0     
 %global godevelsummary0  
 %global godevelheader0 %{expand:
@@ -66,8 +66,8 @@ Obsoletes:
 %global godevelfilelist0 
 #
 # Second golang-*-devel subpackage.
-%global goipathes1       
-%global goipathesex1     
+%global goipaths1        
+%global goipathsex1      
 %global godevelname1     
 %global godevelsummary1  
 %global godevelheader1 %{expand:
@@ -90,7 +90,7 @@ Obsoletes:
 # the corresponding compat-golang-*-devel subpackages
 #
 # First compat-golang-*-devel subpackage set.
-%global goaltipathes0     
+%global goaltipaths0      
 # If unset, and no “gocompatipath<number>” is defined in the spec, fallbacks to
 # “goipath<number>”
 %global gocompatipath0    
@@ -103,7 +103,7 @@ Obsoletes:
 }
 #
 # Second compat-golang-*-devel subpackage set.
-%global goaltipathes1     
+%global goaltipaths1      
 # If unset, and no “gocompatipath<number>” is defined in the spec, fallbacks to
 # “goipath<number>”
 %global gocompatipath1    
@@ -187,3 +187,4 @@ install -m 0755 -vp %{gobuilddir}/bin/* %{buildroot}%{_bindir}/
 %gopkgfiles
 
 %changelog
+

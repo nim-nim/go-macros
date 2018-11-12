@@ -15,7 +15,7 @@ Version:
 %global golicenses      
 %global godocs          
 
-%global goaltipathes     
+%global goaltipaths     
 
 Name:    %{goname}
 # If not set before

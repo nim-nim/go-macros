@@ -40,10 +40,10 @@ Version:
 # Space-separated list of Go import paths to include. Unless specified
 # otherwise the first element in the list will be used to name the subpackage.
 # If unset, defaults to goipath.
-%global goipathes       
+%global goipaths       
 # Space-separated list of Go import paths to exclude. Usually, subsets of the
-# elements in goipathes.
-%global goipathesex     
+# elements in goipaths.
+%global goipathsex     
 # Force a specific subpackage name. For exemple, when you need to package an
 # old code state, you should create a package with the following godevelname:
 # compat-%{goname}-<id>-devel. <id> can be a major version number, a

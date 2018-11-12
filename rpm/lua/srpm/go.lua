@@ -28,7 +28,7 @@ local function rpmname(goipath)
   -- remove eventual .git suffix
   goname       = string.gsub(goname, "%.git/*",              "")
   -- remove eventual git. prefix
-  goname       = string.gsub(goname, "^git%.",              "")
+  goname       = string.gsub(goname, "^git%.",               "")
   -- add golang prefix
   goname       = "golang-" .. goname
   -- remove FQDN root (.com, .org, etc)

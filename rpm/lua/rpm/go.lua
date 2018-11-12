@@ -20,17 +20,17 @@
 -- restricted.
 
 -- Pivot variable definitions for each kind of Go package
-local pivot = {devel = "goipathes", compat = "goaltipathes"}
+local pivot = {devel = "goipaths", compat = "goaltipaths"}
 
 -- Default argument flag for each kind of list
-local listflags = {goipathes = "-i", goipathesex = "-t", goextensions = "-e"}
+local listflags = {goipaths = "-i", goipathsex = "-t", goextensions = "-e"}
 
 -- Convert a space-separated list of import paths to a table indexed by their
 -- rpmname version, to handle upstreams that play naming games
-local function indexedgoipathes(goipathes)
+local function indexedgoipaths(goipaths)
   local       go = require "fedora.srpm.go"
   local giptable = {}
-  for goipath in string.gmatch(goipathes, "[^%s,]+") do
+  for goipath in string.gmatch(goipaths, "[^%s,]+") do
     local key = go.rpmname(goipath)
     if (giptable[key] == nil) then
       giptable[key] = {}
@@ -93,9 +93,9 @@ end
 -- Create fallbacks to goipath variables if godevelipath variables are missing
 local function develenvinit()
   local  fedora = require "fedora.common"
-  if (next(fedora.getsuffixes("goipathes")) == nil) then
+  if (next(fedora.getsuffixes("goipaths")) == nil) then
     for _, suffix in pairs(fedora.getsuffixes("goipath")) do
-      fedora.safeset("goipathes" .. suffix, "%{goipath" .. suffix .. "}")
+      fedora.safeset("goipaths" .. suffix, "%{goipath" .. suffix .. "}")
     end
   end
 end
@@ -108,7 +108,7 @@ local function develenv(suffix, verbose)
   if ismain then
     fedora.zalias(  {"godevelname", "godevelfilelist", "godevelsummary", "godeveldescription",
                      "godevelheader", "goextensions", "gosupfiles", "gosupfilesex",
-                     "goipathes", "goipathesex", "golicenses", "golicensesex", "godocs", "godocsex"},         verbose)
+                     "goipaths", "goipathsex", "golicenses", "golicensesex", "godocs", "godocsex"},         verbose)
   end
   for flag, list in pairs(listflags) do
     local l = rpm.expand("%{?" .. list .. suffix .. "}")
@@ -117,33 +117,33 @@ local function develenv(suffix, verbose)
       l = string.gsub(l, "%s+", " ")
       l = string.gsub(l, "^ ", "")
       l = string.gsub(l, " $", "")
-      if (list ~= "goipathes") then
+      if (list ~= "goipaths") then
         l = string.gsub(l, "([^%s]+)", flag .. " %1")
       end
       fedora.explicitset(list .. suffix, l)
     end
   end
-  local goipathes = rpm.expand("%{?goipathes" .. suffix .. "}")
-  local goipath   = string.match(goipathes, "[^%s]+")
+  local goipaths = rpm.expand("%{?goipaths" .. suffix .. "}")
+  local  goipath = string.match(goipaths, "[^%s]+")
   fedora.safeset("godevelname"        .. suffix, go.rpmname(goipath) .. "-devel",                             verbose)
   fedora.safeset("godevelfilelist"    .. suffix, go.rpmname(goipath) .. "-%{gofilelist}",                     verbose)
   fedora.safeset("godevelsummary"     .. suffix, "%{summary}",                                                verbose)
   fedora.safeset("godeveldescription" .. suffix, "%{?common_description}",                                    verbose)
 	local postdescr = "\n\nThis package contains the source code needed for building packages that reference" ..
-                    "the following Go import pathes:"
-  postdescr = postdescr .. string.gsub(goipathes, "([^%s]+)", "\n – %1")
+                    "the following Go import paths:"
+  postdescr = postdescr .. string.gsub(goipaths, "([^%s]+)", "\n – %1")
   fedora.explicitset("currentgodeveldescription", "%{expand:%{godeveldescription" .. suffix .. "}" ..
                                                   postdescr .. "}",                                           verbose)
   fedora.setcurrent({"godevelname", "godevelfilelist", "godevelsummary",
                      "godevelheader", "goextensions", "gosupfiles", "gosupfilesex",
-                     "goipathes", "goipathesex", "golicenses", "golicensesex", "godocs", "godocsex"}, suffix, verbose)
+                     "goipaths", "goipathsex", "golicenses", "golicensesex", "godocs", "godocsex"}, suffix, verbose)
   if ismain then
     fedora.zalias(  {"godevelname", "godevelfilelist", "godevelsummary", "godeveldescription"},               verbose)
   end
 end
 
 -- Set rpm variables related to the processing of a compat-golang-*-devel subpackage
-local function compatenv(suffix, rpmname, goaltipathes, verbose)
+local function compatenv(suffix, rpmname, goaltipaths, verbose)
   local fedora = require "fedora.common"
   local ismain = (suffix == "") or (suffix == "0")
   if ismain then
@@ -154,9 +154,9 @@ local function compatenv(suffix, rpmname, goaltipathes, verbose)
   fedora.safeset("gocompatdescription" .. suffix,  "%{?common_description}",                                  verbose)
   fedora.setcurrent( {"gocompatipath", "gocompatsummary"}, suffix,                                            verbose)
   fedora.explicitset("currentgoaltipath",         goaltipath,                                                 verbose)
-  local postdescr = "\n\nThis package provides symbolic links that alias the following Go import pathes "   ..
+  local postdescr = "\n\nThis package provides symbolic links that alias the following Go import paths "   ..
                     "to %{currentgocompatipath}:"
-  for _, goaltipath in ipairs(goaltipathes) do
+  for _, goaltipath in ipairs(goaltipaths) do
     postdescr = postdescr .. "\n – " .. goaltipath
   end
   postdescr = postdescr .. "\n\nAliasing Go import paths via symbolic links or http redirects is fragile. " ..
@@ -183,10 +183,10 @@ local function singlepkg(kind, suffix, verbose)
     local fedora = require "fedora.common"
     local ismain = (suffix == "") or (suffix == "0")
     if ismain then
-      fedora.zalias({"goaltipathes"}, verbose)
+      fedora.zalias({"goaltipaths"}, verbose)
     end
-    for rpmname, goaltipathes in pairs(indexedgoipathes(rpm.expand("%{goaltipathes" .. suffix .. "}"))) do
-      compatenv(suffix, rpmname, goaltipathes, verbose)
+    for rpmname, goaltipaths in pairs(indexedgoipaths(rpm.expand("%{goaltipaths" .. suffix .. "}"))) do
+      compatenv(suffix, rpmname, goaltipaths, verbose)
       print(rpm.expand('%__gocompatpkg\n'))
     end
   else
@@ -213,7 +213,7 @@ end
 local function singleinstall(kind, suffix, verbose)
   if     (kind == "devel")  then
     develenv(suffix, verbose)
-    for goipath in string.gmatch(rpm.expand("%{currentgoipathes}"), "[^%s]+") do
+    for goipath in string.gmatch(rpm.expand("%{currentgoipaths}"), "[^%s]+") do
       env('', goipath, verbose, {})
       local vflag = verbose and " -v" or ""
       print(rpm.expand("%__godevelinstall -i " .. goipath .. vflag .. "\n"))
@@ -223,12 +223,12 @@ local function singleinstall(kind, suffix, verbose)
     local fedora = require "fedora.common"
     local ismain = (suffix == "") or (suffix == "0")
     if ismain then
-      fedora.zalias({"goaltipathes"}, verbose)
+      fedora.zalias({"goaltipaths"}, verbose)
     end
-    for rpmname, goaltipathes in pairs(indexedgoipathes(rpm.expand("%{goaltipathes" .. suffix .. "}"))) do
-      compatenv(suffix, rpmname, goaltipathes, verbose)
+    for rpmname, goaltipaths in pairs(indexedgoipaths(rpm.expand("%{goaltipaths" .. suffix .. "}"))) do
+      compatenv(suffix, rpmname, goaltipaths, verbose)
       gocompatipath = rpm.expand("%{currentgocompatipath}")
-      for _, goaltipath in ipairs(goaltipathes) do
+      for _, goaltipath in ipairs(goaltipaths) do
         fedora.explicitset("currentgoaltipath", goaltipath)
         print(rpm.expand("%__gocompatinstall\n"))
         goaltipath    = string.gsub(goaltipath, "/?[^/]+/?$", "")
@@ -267,10 +267,10 @@ local function singlefiles(kind, suffix, verbose)
     local fedora = require "fedora.common"
     local ismain = (suffix == "") or (suffix == "0")
     if ismain then
-      fedora.zalias({"goaltipathes"}, verbose)
+      fedora.zalias({"goaltipaths"}, verbose)
     end
-    for rpmname, goaltipathes in pairs(indexedgoipathes(rpm.expand("%{goaltipathes" .. suffix .. "}"))) do
-      compatenv(suffix, rpmname, goaltipathes, verbose)
+    for rpmname, goaltipaths in pairs(indexedgoipaths(rpm.expand("%{goaltipaths" .. suffix .. "}"))) do
+      compatenv(suffix, rpmname, goaltipaths, verbose)
       print(rpm.expand('%files -n %{currentgocompatname} -f "%{goworkdir}/%{currentgocompatfilelist}"\n'))
     end
   else

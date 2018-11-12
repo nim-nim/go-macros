@@ -21,8 +21,8 @@ Version:
 %global common_description %{expand:
 }
 
-%global goipathes       
-%global goipathesex     
+%global goipaths        
+%global goipathsex      
 %global godevelname     
 %global godevelsummary  
 %global godevelheader %{expand:
@@ -39,9 +39,9 @@ Obsoletes:
 %global gosupfilesex    
 %global godevelfilelist 
 
-%global goaltipathes     
-%global gocompatipath    
-%global gocompatsummary  
+%global goaltipaths     
+%global gocompatipath   
+%global gocompatsummary 
 %global gocompatheader %{expand:
 Requires:  
 Obsoletes: 

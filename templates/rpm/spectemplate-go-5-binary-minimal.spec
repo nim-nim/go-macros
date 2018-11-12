@@ -16,7 +16,7 @@ Version:
 %global golicenses      
 %global godocs          
 
-%global goaltipathes
+%global goaltipaths     
 
 %global gocompatdescription %{expand:
 }
