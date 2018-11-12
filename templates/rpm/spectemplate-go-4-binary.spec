@@ -11,6 +11,7 @@
 Version:         
 %global tag      
 %global commit   
+%global gocid    
 %gometa
 
 # If the documentation files of the various generated subpackages do not
@@ -21,8 +22,9 @@ Version:
 %global common_description %{expand:
 }
 
-%global goipathes       
-%global goipathesex     
+%global goipaths        
+%global goipathsex      
+%global godevelcid      
 %global godevelname     
 %global godevelsummary  
 %global godevelheader %{expand:
@@ -39,14 +41,15 @@ Obsoletes:
 %global gosupfilesex    
 %global godevelfilelist 
 
-%global goaltipathes     
-%global gocompatipath    
-%global gocompatsummary  
-%global gocompatheader %{expand:
+%global goaltipaths     
+%global gocannonipath   
+%global goaltcid        
+%global goaltsummary    
+%global goaltheader      %{expand:
 Requires:  
 Obsoletes: 
 }
-%global gocompatdescription %{expand:
+%global goaltdescription %{expand:
 }
 
 # If one of the produced binaries is widely known it should be used to name the

@@ -59,13 +59,13 @@
 # Create %package sections for every known kind of go subpackage. Arguments:
 # -v                  be verbose
 %gopkg(av) %{expand:
-%godevelpkg  -a %{-v}
-%gocompatpkg -a %{-v}
+%godevelpkg -a %{-v}
+%goaltpkg   -a %{-v}
 }
 
 # Create a %package section for a golang-*-devel subpackage. Arguments:
 # -z <number>         read the zth block of definitions, for example
-#                     %{godevelipath<number>}
+#                     %{goipaths<number>}
 # -a                  process all blocks in one go, instead of using separate
 #                     -z calls
 # -v                  be verbose
@@ -79,16 +79,16 @@ go.pkg("devel", suffix, processall, verbose)
 
 # Create a %package section for a compat-golang-*-devel subpackage. Arguments:
 # -z <number>         read the zth block of definitions, for example
-#                     %{gocompatipath<number>}
+#                     %{goaltipaths<number>}
 # -a                  process all blocks in one go, instead of using separate
 #                     -z calls
 # -v                  be verbose
-%gocompatpkg(z:av) %{lua:
+%goaltpkg(z:av) %{lua:
 local         go =  require "fedora.rpm.go"
 local     suffix =  rpm.expand("%{-z*}")
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 local    verbose = (rpm.expand("%{-v}") ~= "")
-go.pkg("compat", suffix, processall, verbose)
+go.pkg("alt", suffix, processall, verbose)
 }
 
 # Sets environment variables suitable for a Go source archive. Optional arguments:
@@ -290,13 +290,13 @@ end
 # Perform the %install tasks of every known kind of Go subpackage. Arguments:
 # -v                  be verbose
 %gopkginstall(av) %{expand:
-%godevelinstall  -a %{-v}
-%gocompatinstall -a %{-v}
+%godevelinstall -a %{-v}
+%goaltinstall   -a %{-v}
 }
 
 # Perform the %install tasks of a golang-*-devel subpackage. Arguments:
 # -z <number>         read the zth block of definitions, for example
-#                     %{godevelipath<number>}
+#                     %{goipaths<number>}
 # -a                  process all blocks in one go, instead of using separate
 #                     -z calls
 # -v                  be verbose
@@ -310,16 +310,16 @@ go.install("devel", suffix, processall, verbose)
 
 # Perform the %install tasks of a compat-golang-*-devel subpackage. Arguments:
 # -z <number>         read the zth block of definitions, for example
-#                     %{gocompatipath<number>}
+#                     %{goaltipaths<number>}
 # -a                  process all blocks in one go, instead of using separate
 #                     -z calls
 # -v                  be verbose
-%gocompatinstall(z:av) %{lua:
+%goaltinstall(z:av) %{lua:
 local         go =  require "fedora.rpm.go"
 local     suffix =  rpm.expand("%{-z*}")
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 local    verbose = (rpm.expand("%{-v}") ~= "")
-go.install("compat", suffix, processall, verbose)
+go.install("alt", suffix, processall, verbose)
 }
 
 
@@ -386,13 +386,13 @@ end
 # Create %files sections for every known kind of Go subpackage. Arguments:
 # -v                  be verbose
 %gopkgfiles(av) %{expand:
-%godevelfiles  -a %{-v}
-%gocompatfiles -a %{-v}
+%godevelfiles -a %{-v}
+%goaltfiles   -a %{-v}
 }
 
 # Create a %files section for a golang-*-devel subpackage. Arguments:
 # -z <number>         read the zth block of definitions, for example
-#                     %{godevelipath<number>}
+#                     %{goipaths<number>}
 # -a                  process all blocks in one go, instead of using separate
 #                     -z calls
 # -v                  be verbose
@@ -406,14 +406,14 @@ go.files("devel", suffix, processall, verbose)
 
 # Create a %files section for a compat-golang-*-devel subpackage. Arguments:
 # -z <number>         read the zth block of definitions, for example
-#                     %{gocompatipath<number>}
+#                     %{goaltipaths<number>}
 # -a                  process all blocks in one go, instead of using separate
 #                     -z calls
 # -v                  be verbose
-%gocompatfiles(z:av) %{lua:
+%goaltfiles(z:av) %{lua:
 local         go =  require "fedora.rpm.go"
 local     suffix =  rpm.expand("%{-z*}")
 local processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
 local    verbose = (rpm.expand("%{-v}") ~= "")
-go.files("compat", suffix, processall, verbose)
+go.files("alt", suffix, processall, verbose)
 }

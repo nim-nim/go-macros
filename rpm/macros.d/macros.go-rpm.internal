@@ -29,14 +29,14 @@ BuildRequires:  go-rpm-macros
 EOF_DESCR)
 }
 
-%__gocompatpkg() %{expand:
-%package     -n %{currentgocompatname}
-Summary:        %{currentgocompatsummary}
+%__goaltpkg() %{expand:
+%package     -n %{currentgoaltname}
+Summary:        %{currentgoaltsummary}
 BuildRequires:  go-rpm-macros
-%{?currentgocompatheader}
-%description -n %{currentgocompatname}
+%{?currentgoaltheader}
+%description -n %{currentgoaltname}
 %(%cleandescription << EOF_DESCR
-%{?currentgocompatdescription}
+%{?currentgoaltdescription}
 EOF_DESCR)
 }
 
@@ -46,7 +46,7 @@ EOF_DESCR)
 cd "%{gobuilddir}/src/%{__godevelinstall_ipath}"
 %define listfiles_inc %{?currentgosupfiles}
 %define listfiles_ex  %{?currentgosupfilesex}
-gosupfiles=$(%listfiles
+IFS= gosupfiles=$(%listfiles
 )
 go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
                            -b "%{gobuilddir}/bin"                    \\
@@ -59,42 +59,42 @@ go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
                            %{?currentbranch: -B "%{?currentbranch}"} \\
                            -p "%{buildroot}"                         \\
                            -g "%{gopath}"                            \\
-                           %{?currentgoipathesex}                    \\
+                           %{?currentgoipathsex}                     \\
                            %{?currentgoextensions}                   \\
                            %{?goinstallflags}                        \\
                            %{-v} ${gosupfiles}
 )
 }
 
-%__gocompatinstall() %{expand:
+%__goaltinstall() %{expand:
 install -m 0755 -d "%{gobuilddir}/src/%(dirname %{currentgoaltipath})"
-ln -s              "%{gobuilddir}/src/%{currentgocompatipath}"     "%{gobuilddir}/src/%{currentgoaltipath}"
+ln -s              "%{gobuilddir}/src/%{currentgocanonipath}"       "%{gobuilddir}/src/%{currentgoaltipath}"
 install -m 0755 -d "%{buildroot}%{gopath}/src/%(dirname %{currentgoaltipath})"
-ln -s              "%{gopath}/src/%{currentgocompatipath}" "%{buildroot}%{gopath}/src/%{currentgoaltipath}"
-echo               "%{gopath}/src/%{currentgoaltipath}" >> "%{goworkdir}/%{currentgocompatfilelist}"
+ln -s              "%{gopath}/src/%{currentgocanonipath}"   "%{buildroot}%{gopath}/src/%{currentgoaltipath}"
+echo               "%{gopath}/src/%{currentgoaltipath}" >>  "%{goworkdir}/%{currentgoaltfilelist}"
 }
 
 %__godevelinstalldoc() %{expand:
 (
 %define listfiles_inc %{?currentgodocs}
 %define listfiles_ex  %{?currentgodocsex}
-godocs=$(%listfiles
+IFS= godocs=$(%listfiles
 )
 if [[ -n "${godocs}" ]] ; then
   while IFS= read -r -d $'\\n' f ; do
     echo %doc \\""${f}"\\"     >> "%{goworkdir}/%{currentgodevelfilelist}"
-  done <<< ${godocs}
+  done <<< "${godocs}"
 fi
 )
 (
 %define listfiles_inc %{?currentgolicenses}
 %define listfiles_ex  %{?currentgolicensesex}
-golicenses=$(%listfiles
+IFS= golicenses=$(%listfiles
 )
 if [[ -n "${golicenses}" ]] ; then
   while IFS= read -r -d $'\\n' f ; do
     echo "%"license \\"${f}\\" >> "%{goworkdir}/%{currentgodevelfilelist}"
-  done <<< ${golicenses}
+  done <<< "${golicenses}"
 fi
 )
 }

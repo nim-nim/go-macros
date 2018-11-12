@@ -16,11 +16,6 @@ Version:
 %global golicenses      
 %global godocs          
 
-%global goaltipathes
-
-%global gocompatdescription %{expand:
-}
-
 Name:    %{goname}
 Version: 
 Release: 1%{?dist}

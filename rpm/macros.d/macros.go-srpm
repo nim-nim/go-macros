@@ -34,10 +34,15 @@
 %go_compiler     1
 
 # Sanitize a Go import path that can then serve as rpm package name
-# Mandatory parameter: a Go import path
-%gorpmname() %{lua:
+# Mandatory parameter: a Go import path (without flag)
+# Optional parameters:
+#  – “-c <compatid>” a compat identifier, used to distinguish the package
+#                    from the primary package tracking the project recommended
+#                    version. For example: a (different) major version, a
+#                    specific shortened commit, etc
+%gorpmname(c:) %{lua:
 local go = require "fedora.srpm.go"
-print(go.rpmname(rpm.expand("%1")))
+print(go.rpmname("%1", "%{-c*}"))
 }
 
 # Map Go information to rpm metadata. This macro will compute default spec

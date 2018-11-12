@@ -21,14 +21,15 @@
 Version:         
 %global tag      
 %global commit   
+%global gocid    
 %gometa
 
 %global common_description %{expand:
 }
 
-
-%global goipathes       
-%global goipathesex     
+%global goipaths        
+%global goipathsex      
+%global godevelcid      
 %global godevelname     
 %global godevelsummary  
 %global godevelheader %{expand:
@@ -44,23 +45,27 @@ Obsoletes:
 %global gosupfilesex    
 %global godevelfilelist 
 
-# Space-separated list of import paths to simulate. Without this nothing will happen
-%global goaltipathes     
+# Space-separated list of import paths to simulate. Without this nothing will
+# happen.
+%global goaltipaths     
 # rpm variables used to tweak the generated compat-golang-*devel packages.
 # Most of them won’t be needed by the average Go spec file.
 # The import path that will be linked to, if different from “goipath”.
-%global gocompatipath    
+%global gocanonipath    
+# A compatibility id that should be used in the package naming, if different
+# from “gocid”
+%global goaltcid        
 # The subpackage summary;
 # (by default, identical to the srpm summary)
-%global gocompatsummary  
+%global goaltsummary    
 # A container for additional subpackage declarations
-%global gocompatheader %{expand:
+%global goaltheader      %{expand:
 Requires:  
 Obsoletes: 
 }
 # The subpackage base description;
 # (by default, “common_description”)
-%global gocompatdescription %{expand:
+%global goaltdescription %{expand:
 }
 
 Name:    %{goname}
@@ -74,7 +79,7 @@ Source0: %{gosource}
 %{common_description}
 
 # Generate package declarations for all known kinds of Go subpackages
-# You can replace if with “gocompatpkg” to generate Go compat subpackages only
+# You can replace if with “goaltpkg” to generate Go compat subpackages only
 %gopkg
 
 %prep
@@ -83,14 +88,14 @@ Source0: %{gosource}
 
 %install
 # Perform installation steps for all known kinds of Go subpackages
-# You can replace if with “gocompatinstall” to process Go compat subpackages only
+# You can replace if with “goaltinstall” to process Go compat subpackages only
 %gopkginstall
 
 %check
 %gocheck
 
 # Generate file sections for all known kinds of Go subpackages
-# You can replace if with “gocompatfiles” to process Go compat subpackages only
+# You can replace if with “goaltfiles” to process Go compat subpackages only
 %gopkgfiles
 
 %changelog

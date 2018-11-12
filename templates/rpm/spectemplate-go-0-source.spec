@@ -23,6 +23,16 @@
 Version:         
 %global tag      
 %global commit   
+#
+# A compatibility id that should be used in the package naming. It will change
+# the generated name to something derived from
+# compat-golang-goipath-gocid-devel.
+# Used to disambiguate compatibility packages from the package tracking the
+# recommended distribution version. Recommanded values: the version major, a
+# shortened commit tag like
+# %{lua:print(string.sub(rpm.expand("%{?commit}"), 1, 7))}, etc
+%global gocid    
+#
 # Like forgemeta, gometa accepts a “-i” flag to output the rpm variables it
 # reads and sets. Most of those can be overriden before or after the gometa
 # call. If you use “-i” , remove it before committing and pushing to the
@@ -40,16 +50,14 @@ Version:
 # Space-separated list of Go import paths to include. Unless specified
 # otherwise the first element in the list will be used to name the subpackage.
 # If unset, defaults to goipath.
-%global goipathes       
+%global goipaths        
 # Space-separated list of Go import paths to exclude. Usually, subsets of the
-# elements in goipathes.
-%global goipathesex     
-# Force a specific subpackage name. For exemple, when you need to package an
-# old code state, you should create a package with the following godevelname:
-# compat-%{goname}-<id>-devel. <id> can be a major version number, a
-# shortened commit hash, or anything else useful to distinguish the compat
-# package. Shortened commits can be computed with:
-#global shortcommit %{lua:print(string.sub(rpm.expand("%{?commit}"), 1, 7))}
+# elements in goipaths.
+%global goipathsex      
+# A compatibility id that should be used in the package naming, if different
+# from “gocid”.
+%global godevelcid      
+# Force a specific subpackage name.
 %global godevelname     
 # The subpackage summary;
 # (by default, identical to the srpm summary)
@@ -93,9 +101,6 @@ Obsoletes:
 # careful to only replace go* variables when it adds value to the specfile and
 # you understand the consequences. Otherwise you will just be introducing
 # maintenance-intensive discrepancies in the distribution.
-#
-# When creating a compat package, use compat-%{goname}-<id> like you did for
-# “godevelname”.
 Name:    %{goname}
 # If not set before
 Version: 
