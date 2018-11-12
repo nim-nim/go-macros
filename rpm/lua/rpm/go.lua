@@ -145,7 +145,6 @@ end
 -- Set rpm variables related to the processing of a compat-golang-*-devel subpackage
 local function compatenv(suffix, rpmname, goaltipathes, verbose)
   local fedora = require "fedora.common"
-  local     go = require "fedora.srpm.go"
   local ismain = (suffix == "") or (suffix == "0")
   if ismain then
     fedora.zalias(  {"goipath", "gocompatipath", "gocompatdescription", "gocompatsummary", "gocompatheader"}, verbose)
@@ -157,16 +156,15 @@ local function compatenv(suffix, rpmname, goaltipathes, verbose)
   fedora.explicitset("currentgoaltipath",         goaltipath,                                                 verbose)
   local postdescr = "\n\nThis package provides symbolic links that alias the following Go import pathes "   ..
                     "to %{currentgocompatipath}:"
-  local posthead = ""
   for _, goaltipath in ipairs(goaltipathes) do
     postdescr = postdescr .. "\n – " .. goaltipath
-    posthead  = posthead  .. "\nObsoletes: " ..  go.rpmname(goaltipath) .. "-devel < %{version}-%{release}"
   end
   postdescr = postdescr .. "\n\nAliasing Go import paths via symbolic links or http redirects is fragile. " ..
                            "If your Go code depends on this package, you should patch it to import "        ..
                            "directly %{currentgocompatipath}."
   fedora.explicitset("currentgocompatdescription", "%{expand:%{?gocompatdescription" .. suffix .. "}" ..
                                                    postdescr .. "}",                                          verbose)
+  local posthead = "\nObsoletes: " .. rpmname .. "-devel < %{version}-%{release}"
   fedora.explicitset("currentgocompatheader",      "%{expand:%{?gocompatheader" .. suffix .. "}"      ..
                                                    posthead  .. "}",                                          verbose)
   fedora.explicitset("currentgocompatname",        "compat-" .. rpmname .. "-devel",                          verbose)
