@@ -20,28 +20,34 @@
 
 -- Sanitize a Go import path that can then serve as rpm package name
 -- Mandatory parameter: a Go import path
-local function rpmname(goipath)
+local function rpmname(goipath, compatid)
   -- lowercase and end with '/'
-  goname       = string.lower(rpm.expand(goipath) .. "/")
+  local   goname = string.lower(rpm.expand(goipath) .. "/")
   -- remove eventual protocol prefix
-  goname       = string.gsub(goname, "^http(s?)://",         "")
+  goname         = string.gsub(goname, "^http(s?)://",         "")
   -- remove eventual .git suffix
-  goname       = string.gsub(goname, "%.git/*",              "")
+  goname         = string.gsub(goname, "%.git/*",              "")
   -- remove eventual git. prefix
-  goname       = string.gsub(goname, "^git%.",               "")
-  -- add golang prefix
-  goname       = "golang-" .. goname
+  goname         = string.gsub(goname, "^git%.",               "")
   -- remove FQDN root (.com, .org, etc)
-  goname       = string.gsub(goname, "^([^/]+)%.([^%./]+)/", "%1/")
+  -- will also remove vanity FQDNs such as "tools"
+  goname         = string.gsub(goname, "^([^/]+)%.([^%./]+)/", "%1/")
+  -- add golang prefix
+  goname         = "golang-" .. goname
+  -- compat naming additions
+  local compatid = string.lower(rpm.expand(compatid))
+  if  (compatid ~= nil) and (compatid ~= "") then
+    goname       = "compat-" .. goname .. "-" .. compatid
+ end
   -- special-case x.y.z number-strings as that’s an exception in our naming
   -- guidelines
   repeat
-    goname, i = string.gsub(goname, "(%d)%.(%d)",            "%1:%2")
+    goname, i    = string.gsub(goname, "(%d)%.(%d)",           "%1:%2")
   until i == 0
   -- replace various separators rpm does not like with -
-  goname       = string.gsub(goname, "[%._/%-]+",            "-")
+  goname         = string.gsub(goname, "[%._/%-]+",            "-")
   -- because of the Azure sdk
-  goname       = string.gsub(goname, "%-for%-go%-",          "-")
+  goname         = string.gsub(goname, "%-for%-go%-",          "-")
   -- Tokenize along - separators and remove duplicates to avoid
   -- golang-foo-foo-bar-foo names
   local result = ""
@@ -74,7 +80,7 @@ local function meta(suffix, verbose, informative, silent)
   end
   local ismain = (suffix == "") or (suffix == "0")
   if ismain then
-    fedora.zalias({"forgeurl", "goipath", "goname", "gourl", "gosource"}, verbose)
+    fedora.zalias({"forgeurl", "goipath", "gocid", "goname", "gourl", "gosource"}, verbose)
   end
   local spec = {}
   for _, v in ipairs({'goipath', 'forgeurl'}) do
@@ -101,7 +107,7 @@ local function meta(suffix, verbose, informative, silent)
   else
     fedora.safeset("gosource" .. suffix, "%{gourl" .. suffix .. "}/%{archivename" .. suffix .. "}.%{archiveext" .. suffix .. "}",verbose)
   end
-  fedora.safeset(  "goname"   .. suffix, "%gorpmname %{goipath" .. suffix .. "}",verbose)
+  fedora.safeset(  "goname"   .. suffix, rpmname("%{goipath" .. suffix .. "}", "%{?gocid" .. suffix .. "}")                     ,verbose)
   fedora.zalias({"forgeurl","goname","gourl","gosource"},verbose)
   -- Final spec variable summary if the macro was called with -i
   if informative then

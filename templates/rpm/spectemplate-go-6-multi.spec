@@ -22,6 +22,7 @@
 Version:          
 %global tag0      
 %global commit0   
+%global gocid0    
 #
 # Second archive
 %global goipath1  
@@ -29,6 +30,7 @@ Version:
 %global version1  
 %global tag1      
 %global commit1   
+%global gocid1    
 #
 # Continue as necessary…
 #
@@ -50,6 +52,7 @@ Version:
 # “goipath<number>”
 %global goipaths0        
 %global goipathsex0      
+%global godevelcid0      
 %global godevelname0     
 %global godevelsummary0  
 %global godevelheader0 %{expand:
@@ -68,6 +71,7 @@ Obsoletes:
 # Second golang-*-devel subpackage.
 %global goipaths1        
 %global goipathsex1      
+%global godevelcid1      
 %global godevelname1     
 %global godevelsummary1  
 %global godevelheader1 %{expand:
@@ -91,28 +95,26 @@ Obsoletes:
 #
 # First compat-golang-*-devel subpackage set.
 %global goaltipaths0      
-# If unset, and no “gocompatipath<number>” is defined in the spec, fallbacks to
+# If unset, and no “gocanonipath<number>” is defined in the spec, fallbacks to
 # “goipath<number>”
-%global gocompatipath0    
-%global gocompatsummary0  
-%global gocompatheader0 %{expand:
+%global gocanonipath0     
+%global goaltsummary0     
+%global goaltheader0      %{expand:
 Requires:  
 Obsoletes: 
 }
-%global gocompatdescription0 %{expand:
+%global goaltdescription0 %{expand:
 }
 #
 # Second compat-golang-*-devel subpackage set.
 %global goaltipaths1      
-# If unset, and no “gocompatipath<number>” is defined in the spec, fallbacks to
-# “goipath<number>”
-%global gocompatipath1    
-%global gocompatsummary1  
-%global gocompatheader1 %{expand:
+%global gocanonipath1     
+%global goaltsummary1     
+%global goaltheader1      %{expand:
 Requires:  
 Obsoletes: 
 }
-%global gocompatdescription1 %{expand:
+%global goaltdescription1 %{expand:
 }
 #
 # Continue as necessary…
@@ -133,9 +135,9 @@ Source1: %{gosource1}
 
 # “gopkg” will generate all the subpackages package declarations corresponding
 # to the elements declared above.
-# You can replace “gopkg” with “godevelpkg” and “gocompatpkg” calls for finer
+# You can replace “gopkg” with “godevelpkg” and “goaltpkg” calls for finer
 # control.
-# “godevelpkg” and “gocompatpkg” accept the usual selection arguments:
+# “godevelpkg” and “goaltpkg” accept the usual selection arguments:
 # – “-a”          process everything
 # – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.
@@ -159,9 +161,9 @@ for cmd in cmd/* ; do
 done
 
 %install
-# You can replace “gopkginstall” with  “godevelinstall” and “gocompatinstall”
+# You can replace “gopkginstall” with  “godevelinstall” and “goaltinstall”
 # calls for finer control.
-# “gopkginstall” and “godevelinstall” accept the usual selection arguments:
+# “godevelinstall” and “goaltinstall” accept the usual selection arguments:
 # – “-a”          process everything
 # – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.
@@ -178,9 +180,9 @@ install -m 0755 -vp %{gobuilddir}/bin/* %{buildroot}%{_bindir}/
 %doc     
 %{_bindir}/*
 
-# You can replace “gopkgfiles” with  “godevelfiles” and  “gocompatfiles”
+# You can replace “gopkgfiles” with  “godevelfiles” and  “goaltfiles”
 # calls for finer control.
-# “godevelfiles” and “gocompatfiles” accept the usual selection arguments:
+# “godevelfiles” and “goaltfiles” accept the usual selection arguments:
 # – “-a”          process everything
 # – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.

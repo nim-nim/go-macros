@@ -29,14 +29,14 @@ BuildRequires:  go-rpm-macros
 EOF_DESCR)
 }
 
-%__gocompatpkg() %{expand:
-%package     -n %{currentgocompatname}
-Summary:        %{currentgocompatsummary}
+%__goaltpkg() %{expand:
+%package     -n %{currentgoaltname}
+Summary:        %{currentgoaltsummary}
 BuildRequires:  go-rpm-macros
-%{?currentgocompatheader}
-%description -n %{currentgocompatname}
+%{?currentgoaltheader}
+%description -n %{currentgoaltname}
 %(%cleandescription << EOF_DESCR
-%{?currentgocompatdescription}
+%{?currentgoaltdescription}
 EOF_DESCR)
 }
 
@@ -66,12 +66,12 @@ go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
 )
 }
 
-%__gocompatinstall() %{expand:
+%__goaltinstall() %{expand:
 install -m 0755 -d "%{gobuilddir}/src/%(dirname %{currentgoaltipath})"
-ln -s              "%{gobuilddir}/src/%{currentgocompatipath}"     "%{gobuilddir}/src/%{currentgoaltipath}"
+ln -s              "%{gobuilddir}/src/%{currentcanonipath}"         "%{gobuilddir}/src/%{currentgoaltipath}"
 install -m 0755 -d "%{buildroot}%{gopath}/src/%(dirname %{currentgoaltipath})"
-ln -s              "%{gopath}/src/%{currentgocompatipath}" "%{buildroot}%{gopath}/src/%{currentgoaltipath}"
-echo               "%{gopath}/src/%{currentgoaltipath}" >> "%{goworkdir}/%{currentgocompatfilelist}"
+ln -s              "%{gopath}/src/%{currentgocanonipath}"   "%{buildroot}%{gopath}/src/%{currentgoaltipath}"
+echo               "%{gopath}/src/%{currentgoaltipath}" >>  "%{goworkdir}/%{currentgoaltfilelist}"
 }
 
 %__godevelinstalldoc() %{expand:
