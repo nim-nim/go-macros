@@ -387,7 +387,7 @@ end
 # -v                  be verbose
 %gopkgfiles(av) %{expand:
 %godevelfiles -a %{-v}
-%goalrfiles   -a %{-v}
+%goaltfiles   -a %{-v}
 }
 
 # Create a %files section for a golang-*-devel subpackage. Arguments:
