@@ -5,8 +5,8 @@
 # Using this packaging mode is not recommended unless you really need it. If
 # you prepare your sources correctly in prep you should not need it.
 #
-# This file does not repeat the documentation of the usual Go spec elements. To
-# learn about those, consult the “go-0-source” template.
+# All the “go-*-” spec templates complement one another without documentation
+# overlaps. Try to read them all..
 #
 %global goipath  
 %global forgeurl 
