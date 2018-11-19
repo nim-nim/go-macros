@@ -115,7 +115,7 @@ local function develenv(suffix, verbose)
                      "godevelheader", "goextensions", "gosupfiles", "gosupfilesex",
                      "goipaths", "goipathsex", "golicenses", "golicensesex", "godocs", "godocsex"},           verbose)
   end
-  for flag, list in pairs(listflags) do
+  for list, flag in pairs(listflags) do
     local l = rpm.expand("%{?" .. list .. suffix .. "}")
     if (l ~= "") then
       l = string.gsub(" " .. l, "%s+%" .. flag .. "%s+", " ")
