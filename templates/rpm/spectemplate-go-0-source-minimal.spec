@@ -1,4 +1,13 @@
-# Main template for Go packages.
+# Main Go source code packaging template
+#
+# This template documents a minimal set of spec declarations, usually
+# sufficient to publish Go source code to other packages:
+#  – the sister template “go-1-source-full” documents less common declarations;
+#    read it if this file does not answer all your needs.
+#  – complementary “go-*-” spec templates are also provided, to explain the
+#    packaging of other parts than just Go source code.
+# Those other templates add to the documentation provided here, and do not
+# repeat it. Therefore, start by reading this file
 #
 # The master Go import path of the project. Take care to identify it
 # accurately, changing it later will be inconvenient:
@@ -9,7 +18,7 @@
 # If upstream confused itself after multiple forks and renamings, you need to
 # fix references to past names in the Go source files, unit tests included. Do
 # this fixing in prep.
-%global goipath  
+%global goipath
 #
 # gometa is a thin Go-specific wrapper around forgemeta. Therefore, define
 # version, tag, commit… before the gometa line, as you would with forgemeta.
@@ -24,15 +33,6 @@ Version:
 %global tag      
 %global commit   
 #
-# A compatibility id that should be used in the package naming. It will change
-# the generated name to something derived from
-# compat-golang-goipath-gocid-devel.
-# Used to disambiguate compatibility packages from the package tracking the
-# recommended distribution version. Recommanded values: the version major, a
-# shortened commit tag like
-# %{lua:print(string.sub(rpm.expand("%{?commit}"), 1, 7))}, etc
-%global gocid    
-#
 # Like forgemeta, gometa accepts a “-i” flag to output the rpm variables it
 # reads and sets. Most of those can be overriden before or after the gometa
 # call. If you use “-i” , remove it before committing and pushing to the
@@ -40,60 +40,15 @@ Version:
 # See the forgemeta templates for detailed documentation.
 %gometa
 
+# Space-separated list of shell globs matching the project license files.
+%global golicenses      
+# Space-separated list of shell globs matching the project documentation files.
+# The Go rpm macros will pick up .md files by default without this.
+%global godocs          
+
 # A multiline description block shared between subpackages
 %global common_description %{expand:
 }
-
-# rpm variables used to tweak the generated golang-*devel package.
-# Most of them won’t be needed by the average Go spec file.
-#
-# Space-separated list of Go import paths to include. Unless specified
-# otherwise the first element in the list will be used to name the subpackage.
-# If unset, defaults to goipath.
-%global goipaths        
-# Space-separated list of Go import paths to exclude. Usually, subsets of the
-# elements in goipaths.
-%global goipathsex      
-# A compatibility id that should be used in the package naming, if different
-# from “gocid”.
-%global godevelcid      
-# Force a specific subpackage name.
-%global godevelname     
-# The subpackage summary;
-# (by default, identical to the srpm summary)
-%global godevelsummary  
-# A container for additional subpackage declarations
-%global godevelheader %{expand:
-Requires:  
-Obsoletes: 
-}
-# The subpackage base description;
-# (by default, “common_description”)
-%global godeveldescription %{expand:
-}
-# Space-separated list of shell globs matching the project license files.
-%global golicenses      
-# Space-separated list of shell globs matching files you wish to exclude from
-# license lists.
-%global golicensesex    
-# Space-separated list of shell globs matching the project documentation files.
-# Our rpm macros will pick up .md files by default without this.
-%global godocs          
-# Space-separated list of shell globs matching files you wish to exclude from
-# documentation lists. Only works for %godocs-specified files.
-%global godocsex        
-# Space separated list of extentions that should be included in the devel
-# package in addition to Go default file extensions
-%global goextensions    
-# Space-separated list of shell globs matching other files to include in the
-# devel package
-%global gosupfiles      
-# Space-separated list of shell globs matching other files ou wish to exclude from
-# package lists. Only works with %gosupfiles-specified files.
-%global gosupfilesex    
-# The filelist name associated with the subpackage. Setting this should never
-# be necessary unless the default name clashes with something else.
-%global godevelfilelist 
 
 # The following lines use  go* variables computed by gometa as default values.
 # You can replace them with manual definitions. For example, replace gourl with
@@ -106,7 +61,7 @@ Name:    %{goname}
 Version: 
 Release: 1%{?dist}
 Summary: 
-URL:	 %{gourl}
+URL:	   %{gourl}
 Source0: %{gosource}
 %description
 %{common_description}
@@ -141,7 +96,7 @@ Source0: %{gosource}
 #  – remove unit tests that import other parts of the loop
 #  – remove code that import other parts of the loop
 # Sometimes one can resolve dependency loops just by splitting specific
-# subdirectories in a separate -devel subpackage. See also the devel-multi
+# subdirectories in a separate -devel subpackage. See also the “go-6-multi”
 # template.
 #
 # https://github.com/rpm-software-management/rpm/issues/104
@@ -177,7 +132,7 @@ Source0: %{gosource}
 # If a test is broken for some other reason, you can disable it
 # the same way. However, you should also report the problem upstream.
 # Tracking why a particular test was disabled gets difficult quickly. Remember
-# to add a comments that explain why each check was disabled before gocheck.
+# to trace in a comment why each check was disabled.
 %gocheck
 
 # Generate file sections for all known kinds of Go subpackages
