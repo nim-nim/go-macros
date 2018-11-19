@@ -83,7 +83,7 @@ IFS= godocs=$(%listfiles
 if [[ -n "${godocs}" ]] ; then
   while IFS= read -r -d $'\\n' f ; do
     echo %doc \\""${f}"\\"     >> "%{goworkdir}/%{currentgodevelfilelist}"
-  done <<< ${godocs}
+  done <<< "${godocs}"
 fi
 )
 (
@@ -94,7 +94,7 @@ IFS= golicenses=$(%listfiles
 if [[ -n "${golicenses}" ]] ; then
   while IFS= read -r -d $'\\n' f ; do
     echo "%"license \\"${f}\\" >> "%{goworkdir}/%{currentgodevelfilelist}"
-  done <<< ${golicenses}
+  done <<< "${golicenses}"
 fi
 )
 }
