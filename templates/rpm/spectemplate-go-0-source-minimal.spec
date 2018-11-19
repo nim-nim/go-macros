@@ -1,4 +1,4 @@
-# Main Go source code packaging template
+# Main Go packaging template
 #
 # This template documents a minimal set of spec declarations, usually
 # sufficient to publish Go source code to other packages:
@@ -18,7 +18,7 @@
 # If upstream confused itself after multiple forks and renamings, you need to
 # fix references to past names in the Go source files, unit tests included. Do
 # this fixing in prep.
-%global goipath
+%global goipath  
 #
 # gometa is a thin Go-specific wrapper around forgemeta. Therefore, define
 # version, tag, commit… before the gometa line, as you would with forgemeta.
