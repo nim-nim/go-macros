@@ -78,7 +78,7 @@ echo               "%{gopath}/src/%{currentgoaltipath}" >>  "%{goworkdir}/%{curr
 (
 %define listfiles_inc %{?currentgodocs}
 %define listfiles_ex  %{?currentgodocsex}
-godocs=$(%listfiles
+IFS= godocs=$(%listfiles
 )
 if [[ -n "${godocs}" ]] ; then
   while IFS= read -r -d $'\\n' f ; do
@@ -89,7 +89,7 @@ fi
 (
 %define listfiles_inc %{?currentgolicenses}
 %define listfiles_ex  %{?currentgolicensesex}
-golicenses=$(%listfiles
+IFS= golicenses=$(%listfiles
 )
 if [[ -n "${golicenses}" ]] ; then
   while IFS= read -r -d $'\\n' f ; do
