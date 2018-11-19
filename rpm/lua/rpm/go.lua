@@ -166,9 +166,9 @@ local function altenv(suffix, rpmname, goaltipaths, verbose)
     postdescr     = postdescr .. "\n – " .. goaltipath
   end
   postdescr       = postdescr ..
-		    "\n\nAliasing Go import paths via symbolic links or http redirects is fragile.
-                    If your Go code depends on this package, you should patch it to import "        ..
-                    "directly %{currentgocanonipath}."
+		    "\n\nAliasing Go import paths via symbolic links or http redirects is fragile." ..
+            "If your Go code depends on this package, you should patch it to import "   ..
+            "directly %{currentgocanonipath}."
   fedora.explicitset("currentgoaltdescription", "%{expand:%{?goaltdescription" .. suffix .. "}" ..
                                                    postdescr .. "}",                                          verbose)
   local  posthead = "\nObsoletes: " .. go.rpmname("%{currentgocanonipath}", "") .. "-devel < %{version}-%{release}"
