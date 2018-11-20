@@ -68,7 +68,7 @@ go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
 
 %__goaltinstall() %{expand:
 install -m 0755 -d "%{gobuilddir}/src/%(dirname %{currentgoaltipath})"
-ln -s              "%{gobuilddir}/src/%{currentcanonipath}"         "%{gobuilddir}/src/%{currentgoaltipath}"
+ln -s              "%{gobuilddir}/src/%{currentgocanonipath}"       "%{gobuilddir}/src/%{currentgoaltipath}"
 install -m 0755 -d "%{buildroot}%{gopath}/src/%(dirname %{currentgoaltipath})"
 ln -s              "%{gopath}/src/%{currentgocanonipath}"   "%{buildroot}%{gopath}/src/%{currentgoaltipath}"
 echo               "%{gopath}/src/%{currentgoaltipath}" >>  "%{goworkdir}/%{currentgoaltfilelist}"
