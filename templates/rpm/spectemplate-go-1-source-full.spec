@@ -1,7 +1,11 @@
-# Complete Go source code packaging template
+# Common Go source code packaging template.
 #
 # This template complements “go-0-source-minimal”, with less usual spec
-# declarations. Common declarations are documented in “go-0-source-minimal”.
+# declarations.
+#
+# All the “go-*-” spec templates complement one another without documentation
+# overlaps. Try to read them all.
+#
 %global goipath  
 Version:         
 %global tag      

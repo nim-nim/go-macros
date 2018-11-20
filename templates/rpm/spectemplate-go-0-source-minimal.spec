@@ -1,11 +1,10 @@
-# Main Go packaging template (Go source code)
+# Usual Go source code packaging template.
 #
 # This template documents the minimal set of spec declarations, necessary to
-# publish Go source code to other packages:
-#  – the sister “go-1-source-full” template documents less common declarations;
-#    read it if your needs exceed this file.
-#  – complementary “go-*-” spec templates are also provided, to explain the
-#    packaging of other parts than just Go source code.
+# publish Go source code to other packages. The sister “go-1-source-full”
+# template documents less common declarations; read it if your needs exceed
+# this file.
+#
 # All the “go-*-” spec templates complement one another without documentation
 # overlaps. Try to read them all.
 #
