@@ -46,7 +46,7 @@ EOF_DESCR)
 cd "%{gobuilddir}/src/%{__godevelinstall_ipath}"
 %define listfiles_inc %{?currentgosupfiles}
 %define listfiles_ex  %{?currentgosupfilesex}
-gosupfiles=$(%listfiles
+IFS= gosupfiles=$(%listfiles
 )
 go-rpm-integration install -i "%{__godevelinstall_ipath}"            \\
                            -b "%{gobuilddir}/bin"                    \\
