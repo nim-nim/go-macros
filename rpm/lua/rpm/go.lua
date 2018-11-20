@@ -159,7 +159,7 @@ local function altenv(suffix, rpmname, goaltipaths, verbose)
                      "goaltcid", "goaltdescription", "goaltsummary", "goaltheader"},                          verbose)
   end
   fedora.safeset("gocanonipath"     .. suffix,    "%{goipath" .. suffix .. "}",                               verbose)
-  fedora.safeset("goaltcid"         .. suffix,    "%{gocid"   .. suffix .. "}",                               verbose)
+  fedora.safeset("goaltcid"         .. suffix,    "%{?gocid"  .. suffix .. "}",                               verbose)
   fedora.safeset("goaltsummary"     .. suffix,    "%{summary}",                                               verbose)
   fedora.safeset("goaltdescription" .. suffix,    "%{?common_description}",                                   verbose)
   fedora.setcurrent( {"gocanonipath", "goaltcid", "goaltsummary"}, suffix,                                    verbose)
