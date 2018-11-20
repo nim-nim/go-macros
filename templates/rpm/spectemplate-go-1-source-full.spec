@@ -1,68 +1,67 @@
-# Exhaustive Go source code packaging template
+# Complete Go source code packaging template
 #
-# This template complements the “go-0-source-minimal” template with less common
-# declarations. The documentation provided in “go-0-source-minimal” is not
-# repeated here, you should read this file first.
-#
+# This template complements “go-0-source-minimal”, with less usual spec
+# declarations. Common declarations are documented in “go-0-source-minimal”.
 %global goipath  
 Version:         
 %global tag      
 %global commit   
 #
 # A compatibility id that should be used in the package naming. It will change
-# the generated name to something derived from
+# the generated “goname” to something derived from
 # compat-golang-goipath-gocid-devel.
-# Used to disambiguate compatibility packages from the package tracking the
-# recommended distribution version. Recommanded values:
-#  – the version major (if differen),
+# “gocids” are used to disambiguate compatibility packages from the package
+# tracking the recommended distribution version. Usual values:
+#  – the version major (if different),
 #  – a shortened commit tag such as
-#    %{lua:print(string.sub(rpm.expand("%{?commit}"), 1, 7))} etc
+#    %{lua:print(string.sub(rpm.expand("%{?commit}"), 1, 7))}
 %global gocid    
 %gometa
 
 # rpm variables used to tweak the generated golang-*devel package.
 # Most of them won’t be needed by the average Go spec file.
 #
-# Space-separated list of Go import paths to include. Unless specified
+# A space-separated list of Go import paths to include. Unless specified
 # otherwise the first element in the list will be used to name the subpackage.
-# If unset, defaults to goipath.
+# (by default, “goipath”)
 %global goipaths        
-# Space-separated list of Go import paths to exclude. Usually, subsets of the
+# A space-separated list of Go import paths to exclude. Usually, subsets of the
 # elements in goipaths.
 %global goipathsex      
-# A compatibility id that should be used in the package naming, if different
-# from “gocid”.
+# A compatibility id that should be used in the package naming.
+# (by default, “gocid”)
 %global godevelcid      
-# Force a specific subpackage name.
+# A value that will replace the computed subpackage name.
+# (by default “gorpmname-devel”)
 %global godevelname     
-# The subpackage summary;
-# (by default, identical to the srpm summary)
+# The subpackage summary.
+# (by default, “summary”)
 %global godevelsummary  
-# A container for additional subpackage declarations
+# A container for additional subpackage declarations.
 %global godevelheader %{expand:
 Requires:  
 Obsoletes: 
 }
-# The subpackage base description;
+# The subpackage base description.
 # (by default, “common_description”)
 %global godeveldescription %{expand:
 }
 %global golicenses      
-# Space-separated list of shell globs matching files you wish to exclude from
+# A space-separated list of shell globs matching files you wish to exclude from
 # license lists.
 %global golicensesex    
 %global godocs          
-# Space-separated list of shell globs matching files you wish to exclude from
-# documentation lists. Only works for %godocs-specified files.
+# A space-separated list of shell globs matching files you wish to exclude from
+# documentation lists. Only works for “godocs”-specified files.
 %global godocsex        
-# Space separated list of extentions that should be included in the devel
-# package in addition to Go default file extensions
+# A space separated list of extentions that should be included in the devel
+# package in addition to Go default file extensions.
 %global goextensions    
-# Space-separated list of shell globs matching other files to include in the
-# devel package
+# A space-separated list of shell globs matching other files to include in the
+# devel package.
 %global gosupfiles      
-# Space-separated list of shell globs matching other files ou wish to exclude from
-# package lists. Only works with %gosupfiles-specified files.
+# A space-separated list of shell globs matching other files ou wish to exclude from
+# package lists. Only works with “gosupfiles”-specified files.
 %global gosupfilesex    
 # The filelist name associated with the subpackage. Setting this should never
 # be necessary unless the default name clashes with something else.
