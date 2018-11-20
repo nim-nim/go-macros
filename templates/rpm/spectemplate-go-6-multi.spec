@@ -1,20 +1,19 @@
 # This template documents advanced Go packaging with multiples of everything.
 # Don’t try it before you understand how simpler Go packaging is done.
 #
+# All the “go-*-” spec templates complement one another without documentation
+# overlaps. Try to read them all.
+#
 # Don’t hesitate to use “rpmspec -P <specfile>” to check the generated code.
 #
-# It does not repeat the documentation of the usual Go spec elements. To learn
-# about those, consult the “go-0-source”, “go-2-alternative-import-path” and
-# “go-4-binary” templates.
-#
-# You can refer to several upstream archives using the “-a” gometa flag and
-# blocks of declarations suffixed by a block number, like with forgemeta.
+# You can refer to several upstream archives using the “-a” “gometa” flag and
+# blocks of declarations suffixed by a block number, like with “forgemeta”.
 # No suffix or zero suffix refers to the main archive. Refer to the forge-multi
 # template for more detailed information.
 # IT IS A TERRIBLE IDEA TO TRY THIS UNLESS EVERY SOURCE ARCHIVE IS PERFECTLY
 # VERSION-LOCKED WITH THE OTHERS. That will produce broken rpm versionning and
-# broken upgrade paths right and left. It is always simpler and safer to
-# package separate projects with separate spec files.
+# broken upgrade paths. It is always simpler and safer to package separate
+# projects with separate spec files.
 #
 # Main archive
 %global goipath0  
@@ -34,14 +33,11 @@ Version:
 #
 # Continue as necessary…
 #
-# Alternatively, you can use the “-z <number>” gometa argument to process a
+# Alternatively, you can use the “-z <number>” “gometa” argument to process a
 # specific declaration block only.
 %gometa -a
 
 %global _docdir_fmt     %{name}
-
-%global common_description %{expand:
-}
 
 # Likewise, you can declare several devel subpackages, either one by source
 # archive or with any other import path layout.
@@ -118,6 +114,9 @@ Obsoletes:
 }
 #
 # Continue as necessary…
+
+%global common_description %{expand:
+}
 
 # Use usual naming rules when generating binaries.
 Name:    %{goname}

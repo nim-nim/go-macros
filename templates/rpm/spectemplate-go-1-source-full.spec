@@ -1,4 +1,4 @@
-# Common Go source code packaging template.
+# Complete Go source code packaging template.
 #
 # This template complements “go-0-source-minimal”, with less usual spec
 # declarations.

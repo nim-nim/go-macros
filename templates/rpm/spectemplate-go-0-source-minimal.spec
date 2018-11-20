@@ -1,4 +1,4 @@
-# Usual Go source code packaging template.
+# Minimal Go source code packaging template.
 #
 # This template documents the minimal set of spec declarations, necessary to
 # publish Go source code to other packages. The sister “go-1-source-full”
