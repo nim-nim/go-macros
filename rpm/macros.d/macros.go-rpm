@@ -225,7 +225,7 @@ else
   print('GOBUILDREQUIRES=')
 end
 -- https://github.com/gofed/symbols-extractor/issues/155
-print('$((sort -u | xargs -I{} echo "golang({})") <<< $(\\n')
+print('$((sort -u | xargs -I{} echo "golang({})") <<< "$(\\n')
 if processall then
   for _, s in pairs(fedora.getsuffixes("goipath")) do
     process(s, "")
@@ -233,7 +233,7 @@ if processall then
 else
    process(rpm.expand("%{?-z*}"), rpm.expand(goipath))
 end
-print('))\\n')
+print('"))\\n')
 }
 
 # Try to install Go package files in sensible locations, with strict directory
