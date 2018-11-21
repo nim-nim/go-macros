@@ -148,7 +148,7 @@ Source1: %{gosource1}
 # – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.
 %goprep -a
-#gobuildrequires -a
+%gobuildrequires -a
 
 %build
 # When your spec processes multiple Go source archives, you need to call

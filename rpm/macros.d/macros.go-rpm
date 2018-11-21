@@ -151,11 +151,6 @@ cd                              "%{mybuilddir}/src/%{mygoipath}"
 
 # Computes BuildRequires for a given import path. Optional argument:
 # -i <go import path> use the specified import path value
-%gobuildrequires(i:) %{expand: (
-golist --imported --package-path %{?-i*}%{!-i:%{currentgoipath}} --skip-self
-golist --imported --package-path %{?-i*}%{!-i:%{currentgoipath}} --skip-self --tests) | sort -u | xargs -I{} echo "golang({})"
-}
-
 # Perform usual Go source preparation steps. Optional arguments:
 # -z <number>         read the zth block of definitions, for example
 #                     %{goipath<number>}, %{commit<number>}…
@@ -172,7 +167,6 @@ golist --imported --package-path %{?-i*}%{!-i:%{currentgoipath}} --skip-self --t
 # -k                  keep the vendor directory, do not delete it
 # -e                  use extracted archives, do not perform %setup-like
 #                     operations
-# -r                  resolve BuildRequires, but do not install them
 # -v                  be verbose
 %goprep(z:ai:b:s:kerv) %{lua:
 local        fedora =  require "fedora.common"
@@ -191,7 +185,6 @@ local function process(suffix)
     print(rpm.expand("%setup " .. setupflags .. " %{?forgesetupargs" .. suffix .. "}\\n"))
   end
   print(  rpm.expand("%gomkdir " .. zsuffix .. gomkdirflags .. "\\n"))
-  print('GOBUILDREQUIRES=$((sort -u |grep -v "^$" || :) <<< "$(' .. rpm.expand("%gobuildrequires") .. ')\\n${GOBUILDREQUIRES}")\\n')
 end
 -- Main loop
 if processall then
@@ -201,10 +194,47 @@ if processall then
 else
    process(rpm.expand("%{?-z*}"))
 end
-if installdeps then
-  print('[[ -n "${GOBUILDREQUIRES}" ]] && mock-install ${GOBUILDREQUIRES}\\n')
-  print('unset GOBUILDREQUIRES\\n')
+}
+
+# https://github.com/rpm-software-management/rpm/issues/104
+# Computes BuildRequires for a given import path. Arguments:
+# -z <number>         read the zth block of definitions, for example
+#                     %{goipath<number>}, %{commit<number>}…
+#                     derived from the import path value if not specified
+# -a                  process all sources in one go, instead of using separate
+#                     -z calls
+# -i <go import path> use the specified import path value instead of the one
+#                     found in %{goipath<number>}
+# -i <go import path> use the specified import path value
+# -r                  resolve BuildRequires, but do not install them
+%gobuildrequires(z:ai:r) %{lua:
+local        fedora =  require "fedora.common"
+local   installdeps = (rpm.expand("%{-r}") == "")
+local    processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")
+local       goipath = rpm.expand("%{?-i*}")
 end
+-- https://github.com/gofed/symbols-extractor/issues/159
+local function process(suffix, goipath)
+  local goipath = (goipath ~= "") and goipath or "%{goipath" .. suffix .. "}"
+  print("golist --imported --package-path " .. goipath .. " --skip-self\n")
+  print("golist --imported --package-path " .. goipath .. " --skip-self --tests\n")
+end
+-- Main loop
+if installdeps then
+  print('mock-install ')
+else
+  print('GOBUILDREQUIRES=')
+end
+-- https://github.com/gofed/symbols-extractor/issues/155
+print('$((sort -u |  xargs -I{} echo "golang({})") <<< "$(')
+if processall then
+  for _, s in pairs(fedora.getsuffixes("goipath")) do
+    process(s, "")
+  end
+else
+   process(rpm.expand("%{?-z*}"), goipath)
+end
+print(')\n')
 }
 
 # Try to install Go package files in sensible locations, with strict directory

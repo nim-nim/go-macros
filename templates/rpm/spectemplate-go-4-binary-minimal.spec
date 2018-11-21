@@ -46,7 +46,7 @@ Source0: %{gosource}
 
 %prep
 %goprep
-#gobuildrequires
+%gobuildrequires
 
 %build
 # You need to identify manually the project parts that can be built, and how to
