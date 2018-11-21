@@ -214,7 +214,7 @@ local    processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == ""
 local       goipath = rpm.expand("%{?-i*}")
 -- https://github.com/gofed/symbols-extractor/issues/159
 local function process(suffix, goipath)
-  local goipath = (goipath ~= "") and goipath or "%{goipath" .. suffix .. "}"
+  local goipath = (goipath ~= "") and goipath or rpm.expand("%{goipath" .. suffix .. "}")
   print("golist --imported --package-path " .. goipath .. " --skip-self\\n")
   print("golist --imported --package-path " .. goipath .. " --skip-self --tests\\n")
 end
@@ -231,7 +231,7 @@ if processall then
     process(s, "")
   end
 else
-   process(rpm.expand("%{?-z*}"), goipath)
+   process(rpm.expand("%{?-z*}"), rpm.expand(goipath))
 end
 print('))\\n')
 }
