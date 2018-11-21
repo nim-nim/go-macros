@@ -73,7 +73,7 @@ Source0: %{gosource}
 
 %prep
 %goprep
-#gobuildrequires
+%gogenbr
 
 %install
 %gopkginstall
