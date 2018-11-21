@@ -233,7 +233,7 @@ if processall then
 else
    process(rpm.expand("%{?-z*}"), rpm.expand(goipath))
 end
-print('"))\\n')
+print(')")\\n')
 }
 
 # Try to install Go package files in sensible locations, with strict directory
