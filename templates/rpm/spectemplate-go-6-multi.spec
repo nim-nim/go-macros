@@ -143,12 +143,12 @@ Source1: %{gosource1}
 %gopkg
 
 %prep
-# “%goprep” and “gobuildrequires” accept the usual selection arguments:
+# “%goprep” and “gogenbr” accept the usual selection arguments:
 # – “-a”          process everything
 # – “-z <number>” process a specific declaration block
 # If no flag is specified they only process the zero/nosuffix block.
 %goprep -a
-%gobuildrequires -a
+%gogenbr -a
 
 %build
 # When your spec processes multiple Go source archives, you need to call

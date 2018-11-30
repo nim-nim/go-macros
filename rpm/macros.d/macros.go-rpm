@@ -207,7 +207,7 @@ end
 #                     found in %{goipath<number>}
 # -i <go import path> use the specified import path value
 # -r                  resolve BuildRequires, but do not install them
-%gobuildrequires(z:ai:r) %{lua:
+%gogenbr(z:ai:r) %{lua:
 local        fedora =  require "fedora.common"
 local   installdeps = (rpm.expand("%{-r}") == "")
 local    processall = (rpm.expand("%{-a}") ~= "") and (rpm.expand("%{-z}") == "")

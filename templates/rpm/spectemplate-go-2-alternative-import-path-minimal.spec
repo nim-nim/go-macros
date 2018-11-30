@@ -49,7 +49,7 @@ Source0: %{gosource}
 
 %prep
 %goprep
-%gobuildrequires
+%gogenbr
 
 %install
 # Perform installation steps for all known kinds of Go subpackages. You can

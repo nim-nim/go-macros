@@ -98,13 +98,13 @@ Source0: %{gosource}
 # template.
 #
 # https://github.com/rpm-software-management/rpm/issues/104
-# “gobuildrequires” computes the build dependencies of the packaged Go code and
+# “gogenbr” computes the build dependencies of the packaged Go code and
 # will install them in the build root once infra has improved. Assuming you
 # fixed source problems after “goprep”, it should just work.
-# Right now, “gobuildrequires” only manages version-less Go dependencies. If your
+# Right now, “gogenbr” only manages version-less Go dependencies. If your
 # project requires a specific dependency version, or something which is not Go
 # code, you need to declare the corresponding BuildRequires manually as usual.
-%gobuildrequires
+%gogenbr
 
 %install
 # Perform installation steps for all known kinds of Go subpackages
